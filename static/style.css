@@ -1,0 +1,25 @@
+:root{--ink:#193e33;--muted:#68736c;--cream:#f8f7f2;--line:#d9ddd2;--accent:#718c56}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.7 Arial,Helvetica,sans-serif}
+.wrap{width:min(1120px,100%);padding-left:40px;padding-right:40px;margin:auto}
+a{color:inherit;text-decoration:none}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:5px}
+header{display:flex;justify-content:space-between;align-items:center;gap:24px;min-height:115px;border-bottom:1px solid var(--line)}
+.brand{font-size:25px;font-weight:bold;letter-spacing:-1px}.brand span{color:var(--accent)}
+.badge{font-size:10px;letter-spacing:1.3px;border:1px solid var(--line);border-radius:4px;padding:7px 12px}
+.hero{padding:90px 0 75px;max-width:790px}
+.eyebrow{font-size:10px;font-weight:bold;letter-spacing:2px;margin:0 0 25px}
+h1,h2,h3{line-height:1.1;margin-top:0}
+h1{font:400 clamp(45px,6vw,78px)/1.07 Georgia,serif;letter-spacing:-2.8px;margin-bottom:28px}
+h1 em{color:var(--accent);font-weight:400}
+.intro{font-size:17px;color:var(--muted);max-width:540px;line-height:1.8}
+.status{font-size:12px;color:var(--muted);margin-top:30px}
+.status>span{display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--accent)}
+.plan{border-top:1px solid var(--line);padding:40px 0 55px;display:grid;grid-template-columns:1fr 1.8fr;gap:50px}
+h2{font:400 30px/1.2 Georgia,serif;letter-spacing:-.6px}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+article>span{font-size:12px;color:var(--accent)}
+h3{font:400 23px/1.2 Georgia,serif;margin:15px 0 12px}
+article p{color:var(--muted);font-size:13px}
+footer{display:flex;justify-content:space-between;gap:18px;border-top:1px solid var(--line);padding-top:24px;padding-bottom:24px;font-size:11px;color:var(--muted)}
+@media(max-width:760px){.wrap{padding-left:24px;padding-right:24px}header{min-height:100px;flex-wrap:wrap;gap:10px;padding-top:22px;padding-bottom:22px}.brand{font-size:22px}.badge{font-size:8px}.hero{padding:58px 0 45px}h1{font-size:49px;letter-spacing:-2px}.intro{font-size:15px}.plan{grid-template-columns:1fr;gap:20px}.features{grid-template-columns:1fr;gap:12px}article{border-bottom:1px solid var(--line);padding-bottom:12px}article:last-child{border-bottom:0}footer{flex-direction:column;gap:6px}.status{font-size:11px}}

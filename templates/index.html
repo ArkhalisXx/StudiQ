@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Common Ground co-working space booking system — project foundation.">
+  <title>Common Ground · Project baseline</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="wrap">
+    <a class="brand" href="{{ url_for('home') }}">common ground<span>.</span></a>
+    <span class="badge">STAGE 01 · PROJECT BASELINE</span>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <p class="eyebrow">CO-WORKING SPACE BOOKING SYSTEM</p>
+      <h1>A little space.<br><em>A lot of possibility.</em></h1>
+      <p class="intro">The foundation for a simpler way to book a desk, plan a workday, and manage a shared workspace.</p>
+      <p class="status"><span aria-hidden="true"></span> Project in development · booking is not available yet</p>
+    </section>
+    <section class="plan" aria-labelledby="plan-title">
+      <div>
+        <p class="eyebrow">WHAT WE’RE BUILDING</p>
+        <h2 id="plan-title">A better working day,<br>one step at a time.</h2>
+      </div>
+      <div class="features">
+        <article><span>01 /</span><h3>Book a desk</h3><p>Choose a date, a fixed time slot, and a desk type.</p></article>
+        <article><span>02 /</span><h3>Choose a pass</h3><p>Simple packages, secure checkout, and an email receipt.</p></article>
+        <article><span>03 /</span><h3>Manage the space</h3><p>Desk allocations, arrivals, and maintenance for the team.</p></article>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap"><span>Common Ground · CPE3121</span><span>Python + Flask · Stage 1 foundation</span></footer>
+</body>
+</html>

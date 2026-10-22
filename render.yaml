@@ -1,0 +1,12 @@
+# Optional hosting for the Stage 1 homepage. No external credentials are needed.
+services:
+  - type: web
+    name: common-ground
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: sh start.sh
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.14
