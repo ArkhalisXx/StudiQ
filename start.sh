@@ -1,3 +1,4 @@
 #!/bin/sh
 set -eu
-exec gunicorn app:app --bind "0.0.0.0:${PORT:-10000}" --workers 2 --threads 2 --access-logfile -
+cd "$(dirname "$0")"
+exec .venv/bin/python -m uvicorn app.main:app --host "${HOST:-127.0.0.1}" --port "${PORT:-8000}" --reload

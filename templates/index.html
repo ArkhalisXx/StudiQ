@@ -3,34 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Common Ground co-working space booking system — project foundation.">
-  <title>Common Ground · Project baseline</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="description" content="Common Ground workspace availability — local development baseline.">
+  <title>Common Ground · Find your space</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+  <script src="{{ url_for('static', path='app.js') }}" defer></script>
 </head>
 <body>
   <header class="wrap">
-    <a class="brand" href="{{ url_for('home') }}">common ground<span>.</span></a>
-    <span class="badge">STAGE 01 · PROJECT BASELINE</span>
+    <a class="brand" href="/">common ground<span>.</span></a>
+    <nav aria-label="Main navigation"><a href="#availability">Find a space</a><a href="#plan-title">What’s next</a></nav>
+    <span class="badge">LOCAL DEVELOPMENT · STAGE 01</span>
   </header>
   <main class="wrap">
     <section class="hero">
-      <p class="eyebrow">CO-WORKING SPACE BOOKING SYSTEM</p>
+      <p class="eyebrow">CO-WORKING, AT YOUR PACE</p>
       <h1>A little space.<br><em>A lot of possibility.</em></h1>
-      <p class="intro">The foundation for a simpler way to book a desk, plan a workday, and manage a shared workspace.</p>
-      <p class="status"><span aria-hidden="true"></span> Project in development · booking is not available yet</p>
+      <p class="intro">A desk for deep work. A room for your next big idea. Find a little space to make things happen.</p>
+      <p class="status"><span aria-hidden="true"></span> Explore availability · reservations are coming soon</p>
+    </section>
+    <section class="finder" id="availability" aria-labelledby="finder-title">
+      <div class="finder-heading"><div><p class="eyebrow">MAKE ROOM FOR YOUR DAY</p><h2 id="finder-title">Find your space.</h2></div><p>Morning 09:00–12:00<br>Afternoon 13:00–16:00 · Manila time</p></div>
+      <p class="notice">Sample inventory and prices for local development. This check does not reserve a workspace.</p>
+      <form id="availability-form">
+        <label for="booking_date">Date<input type="date" id="booking_date" name="booking_date" value="{{ today }}" min="{{ today }}" required></label>
+        <label for="workspace_type_id">Workspace<select id="workspace_type_id" name="workspace_type_id" required disabled><option value="">Loading…</option></select></label>
+        <label for="package_id">Pass<select id="package_id" name="package_id" required disabled><option value="">Loading…</option></select></label>
+        <label for="time_slot_id">Time slot<select id="time_slot_id" name="time_slot_id" required disabled><option value="">Loading…</option></select></label>
+        <button type="submit" disabled>Check availability <span aria-hidden="true">↗</span></button>
+      </form>
+      <p id="availability-result" role="status" aria-live="polite">Loading the workspace catalog…</p>
+      <noscript><p>Enable JavaScript to check availability, or use the read-only API.</p></noscript>
     </section>
     <section class="plan" aria-labelledby="plan-title">
-      <div>
-        <p class="eyebrow">WHAT WE’RE BUILDING</p>
-        <h2 id="plan-title">A better working day,<br>one step at a time.</h2>
-      </div>
+      <div><p class="eyebrow">ONE STEP AT A TIME</p><h2 id="plan-title">A better working day,<br>built from the ground up.</h2></div>
       <div class="features">
-        <article><span>01 /</span><h3>Book a desk</h3><p>Choose a date, a fixed time slot, and a desk type.</p></article>
-        <article><span>02 /</span><h3>Choose a pass</h3><p>Simple packages, secure checkout, and an email receipt.</p></article>
-        <article><span>03 /</span><h3>Manage the space</h3><p>Desk allocations, arrivals, and maintenance for the team.</p></article>
+        <article><span>01 / AVAILABLE NOW</span><h3>Explore the space</h3><p>Browse workspace types, compare sample passes, and check availability.</p></article>
+        <article><span>02 / COMING NEXT</span><h3>Make it yours</h3><p>Accounts, temporary reservations, secure checkout, and email receipts.</p></article>
+        <article><span>03 / ON THE ROADMAP</span><h3>Manage the day</h3><p>Staff allocation grids, check-ins, member records, and maintenance blocks.</p></article>
       </div>
     </section>
   </main>
-  <footer class="wrap"><span>Common Ground · CPE3121</span><span>Python + Flask · Stage 1 foundation</span></footer>
+  <footer class="wrap"><span>Common Ground · CPE3121</span><span>Local baseline · booking and payments unavailable</span></footer>
 </body>
 </html>

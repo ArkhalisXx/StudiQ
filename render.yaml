@@ -1,12 +1,14 @@
-# Optional hosting for the Stage 1 homepage. No external credentials are needed.
+# Optional later deployment. Local development uses sh start.sh.
 services:
   - type: web
     name: common-ground
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: sh start.sh
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.14
+# The default SQLite store is ephemeral on Render. Configure PostgreSQL and
+# migrations before using this blueprint for persistent production data.
