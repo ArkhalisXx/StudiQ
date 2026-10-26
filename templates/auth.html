@@ -2,11 +2,12 @@
 {% block title %}StudiQ · {{ 'Create account' if register else 'Log in' }}{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', path='auth.js') }}" defer></script>{% endblock %}
 {% block content %}
-<main class="wrap auth-layout">
+<main class="wrap auth-layout" id="main-content">
   <section class="auth-intro" aria-labelledby="auth-title">
     <p class="eyebrow">YOUR SPACE STARTS HERE</p>
     <h1 id="auth-title">{{ 'A fresh start.' if register else 'Welcome back.' }}<br><em>{{ 'A place for you.' if register else 'Make yourself at home.' }}</em></h1>
     <p class="intro">{{ 'Join StudiQ and make room for your goals. Your next great study session starts here.' if register else 'Good to see you again. Log in to your StudiQ account and find your focus.' }}</p>
+    <div class="auth-art">{% include 'illustration.html' %}</div>
     <p class="status"><span aria-hidden="true"></span> A space for your next chapter.</p>
   </section>
   <section class="auth-card" aria-labelledby="form-title">

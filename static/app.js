@@ -5,6 +5,13 @@ const pass = form.elements.package_id;
 const slot = form.elements.time_slot_id;
 const submit = form.querySelector('button');
 let packages = [];
+let selectedSingleSlot = '';
+let selectionVersion = 0;
+
+function showResult(message, state = 'idle') {
+  result.textContent = message;
+  result.dataset.state = state;
+}
 
 async function getJSON(url) {
   const response = await fetch(url);
@@ -18,6 +25,16 @@ function fill(select, rows, label) {
 }
 function updateSlot() {
   const day = packages.find(p => String(p.id) === pass.value)?.slot_policy === 'day';
+  if (day) {
+    if (!slot.disabled) selectedSingleSlot = slot.value;
+    if (!slot.querySelector('option[value="day"]')) {
+      slot.add(new Option('Both slots · Morning + Afternoon', 'day'));
+    }
+    slot.value = 'day';
+  } else {
+    slot.querySelector('option[value="day"]')?.remove();
+    if (selectedSingleSlot) slot.value = selectedSingleSlot;
+  }
   slot.disabled = day;
   slot.required = !day;
 }
@@ -33,24 +50,32 @@ async function loadCatalog() {
     fill(slot, slots, s => `${s.label} · ${s.starts_at}–${s.ends_at}`);
     updateSlot();
     submit.disabled = false;
-    result.textContent = 'Choose your day and pass to see available spaces. A Day Pass uses both slots in the same workspace.';
+    showResult('Choose your day and pass to see available spaces. A Day Pass uses both slots in the same workspace.');
   } catch (error) {
-    result.textContent = `Could not load the catalog. ${error.message} Refresh to try again.`;
+    showResult(`Could not load the catalog. ${error.message} Refresh to try again.`, 'error');
   }
 }
 pass.addEventListener('change', updateSlot);
-form.addEventListener('input', () => { result.textContent = 'Selections changed. Check availability for the latest result.'; });
+form.addEventListener('input', () => {
+  selectionVersion += 1;
+  showResult('Selections changed. Check availability for the latest result.');
+});
 form.addEventListener('submit', async event => {
   event.preventDefault();
+  if (submit.disabled) return;
+  const version = selectionVersion;
   submit.disabled = true;
-  result.textContent = 'Checking availability…';
+  form.setAttribute('aria-busy', 'true');
+  showResult('Checking availability…', 'loading');
   try {
     const data = await getJSON(`/api/workspaces/availability?${new URLSearchParams(new FormData(form))}`);
-    result.textContent = `${data.available} ${data.workspace_type.toLowerCase()} space${data.available === 1 ? '' : 's'} available on ${data.booking_date} · ${data.slots.join(' + ')}. ${data.message}`;
+    if (version !== selectionVersion) return;
+    showResult(`${data.available} ${data.workspace_type.toLowerCase()} space${data.available === 1 ? '' : 's'} available on ${data.booking_date} · ${data.slots.join(' + ')}. ${data.message}`, data.available > 0 ? 'success' : 'empty');
   } catch (error) {
-    result.textContent = `Unable to check availability. ${error.message}`;
+    if (version === selectionVersion) showResult(`Unable to check availability. ${error.message}`, 'error');
   } finally {
     submit.disabled = false;
+    form.removeAttribute('aria-busy');
   }
 });
 loadCatalog();

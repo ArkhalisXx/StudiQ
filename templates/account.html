@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}StudiQ · My account{% endblock %}
 {% block content %}
-<main class="wrap account-page">
+<main class="wrap account-page" id="main-content">
   <p class="eyebrow">MY STUDIQ</p>
   <h1>Welcome, <em>{{ user.full_name }}.</em></h1>
   <p class="intro">You’re logged in. A productive day is a little closer.</p>
+  <div class="account-grid">
   <section class="account-card" aria-labelledby="details-title">
-    <h2 id="details-title">Your details</h2>
+    <div class="profile-heading"><span class="profile-avatar" aria-hidden="true">{{ user.full_name[:1]|upper }}</span><div><p class="eyebrow">YOUR CORNER OF STUDIQ</p><h2 id="details-title">Your details</h2></div></div>
     <dl><dt>Full name</dt><dd>{{ user.full_name }}</dd><dt>Email address</dt><dd>{{ user.email }}</dd></dl>
-    <p class="notice">Reservations are coming next. For now, explore the spaces and find your perfect workday.</p>
-    <a class="button-link" href="/#availability">Find a space <span aria-hidden="true">&rarr;</span></a>
   </section>
+  <aside class="account-next"><p class="eyebrow">A LITTLE ROOM FOR POSSIBILITY</p><h2>Your next great day<br>starts with a space.</h2><p>Explore our desks and rooms, compare passes, and find a time that works for you.</p><a class="button-link" href="/#availability">Find a space <span aria-hidden="true">&rarr;</span></a><span class="account-note">Reservations are coming soon.</span></aside>
+  </div>
 </main>
 {% endblock %}
