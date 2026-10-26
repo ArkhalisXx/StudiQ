@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Common Ground — a little space for your next big idea.">
+  <title>{% block title %}Common Ground{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+  <script src="{{ url_for('static', path='site.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</head>
+<body>
+  <header class="wrap">
+    <a class="brand" href="/">common ground<span>.</span></a>
+    <nav aria-label="Main navigation">
+      <a href="/#availability">Find a space</a>
+      {% if user %}
+      <a href="/account"{% if request.url.path == '/account' %} aria-current="page"{% endif %}>My account</a>
+      <button class="nav-button" type="button" data-logout>Log out</button>
+      {% else %}
+      <a href="/login"{% if request.url.path == '/login' %} aria-current="page"{% endif %}>Log in</a>
+      <a class="nav-signup" href="/register"{% if request.url.path == '/register' %} aria-current="page"{% endif %}>Create account</a>
+      {% endif %}
+    </nav>
+  </header>
+  <p id="site-message" class="wrap site-message" role="alert" hidden></p>
+  {% block content %}{% endblock %}
+  <footer class="wrap"><span>Common Ground · CPE3121</span><span>Local baseline · booking and payments unavailable</span></footer>
+</body>
+</html>
