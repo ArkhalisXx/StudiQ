@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Common Ground · My account{% endblock %}
+{% block content %}
+<main class="wrap account-page">
+  <p class="eyebrow">MY COMMON GROUND</p>
+  <h1>Welcome, <em>{{ user.full_name }}.</em></h1>
+  <p class="intro">You’re logged in. A productive day is a little closer.</p>
+  <section class="account-card" aria-labelledby="details-title">
+    <h2 id="details-title">Your details</h2>
+    <dl><dt>Full name</dt><dd>{{ user.full_name }}</dd><dt>Email address</dt><dd>{{ user.email }}</dd></dl>
+    <p class="notice">Reservations are coming next. For now, explore the spaces and find your perfect workday.</p>
+    <a class="button-link" href="/#availability">Find a space <span aria-hidden="true">&rarr;</span></a>
+  </section>
+</main>
+{% endblock %}

@@ -5,6 +5,7 @@ from sqlalchemy import Boolean, CheckConstraint, Date, ForeignKey, Integer, Stri
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
+from app.models.account import AuthSession, User
 
 
 class WorkspaceType(Base):

@@ -1,19 +1,7 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Common Ground workspace availability — local development baseline.">
-  <title>Common Ground · Find your space</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
-  <script src="{{ url_for('static', path='app.js') }}" defer></script>
-</head>
-<body>
-  <header class="wrap">
-    <a class="brand" href="/">common ground<span>.</span></a>
-    <nav aria-label="Main navigation"><a href="#availability">Find a space</a><a href="#plan-title">What’s next</a></nav>
-    <span class="badge">LOCAL DEVELOPMENT · STAGE 01</span>
-  </header>
+{% extends 'base.html' %}
+{% block title %}Common Ground · Find your space{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='app.js') }}" defer></script>{% endblock %}
+{% block content %}
   <main class="wrap">
     <section class="hero">
       <p class="eyebrow">CO-WORKING, AT YOUR PACE</p>
@@ -38,11 +26,9 @@
       <div><p class="eyebrow">ONE STEP AT A TIME</p><h2 id="plan-title">A better working day,<br>built from the ground up.</h2></div>
       <div class="features">
         <article><span>01 / AVAILABLE NOW</span><h3>Explore the space</h3><p>Browse workspace types, compare sample passes, and check availability.</p></article>
-        <article><span>02 / COMING NEXT</span><h3>Make it yours</h3><p>Accounts, temporary reservations, secure checkout, and email receipts.</p></article>
+        <article><span>02 / ACCOUNTS ARE HERE</span><h3>Make it yours</h3><p>Create your account and log in. Reservations, checkout, and email receipts are coming next.</p></article>
         <article><span>03 / ON THE ROADMAP</span><h3>Manage the day</h3><p>Staff allocation grids, check-ins, member records, and maintenance blocks.</p></article>
       </div>
     </section>
   </main>
-  <footer class="wrap"><span>Common Ground · CPE3121</span><span>Local baseline · booking and payments unavailable</span></footer>
-</body>
-</html>
+{% endblock %}

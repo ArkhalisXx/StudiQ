@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Common Ground · {{ 'Create account' if register else 'Log in' }}{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='auth.js') }}" defer></script>{% endblock %}
+{% block content %}
+<main class="wrap auth-layout">
+  <section class="auth-intro" aria-labelledby="auth-title">
+    <p class="eyebrow">YOUR SPACE STARTS HERE</p>
+    <h1 id="auth-title">{{ 'A fresh start.' if register else 'Welcome back.' }}<br><em>{{ 'A place for you.' if register else 'Make yourself at home.' }}</em></h1>
+    <p class="intro">{{ 'Create an account today. Your next great workday starts with a little space.' if register else 'Good to see you again. Log in to your Common Ground account.' }}</p>
+    <p class="status"><span aria-hidden="true"></span> A little space. A lot of possibility.</p>
+  </section>
+  <section class="auth-card" aria-labelledby="form-title">
+    <p class="eyebrow">COMMON GROUND</p>
+    <h2 id="form-title">{{ 'Create your account' if register else 'Log in' }}</h2>
+    <p class="auth-subtitle">{{ 'A few details, and you’re right at home.' if register else 'Enter your details to pick up where you left off.' }}</p>
+    <form id="auth-form" class="auth-form" data-mode="{{ 'register' if register else 'login' }}" method="post" action="/api/auth/{{ 'register' if register else 'login' }}">
+      {% if register %}
+      <label for="full_name">Full name</label>
+      <input id="full_name" name="full_name" type="text" autocomplete="name" maxlength="80" placeholder="Your full name" required>
+      {% endif %}
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" autocomplete="username" maxlength="254" placeholder="you@example.com" required>
+      <label for="password">Password</label>
+      <div class="password-input">
+        <input id="password" name="password" type="password" autocomplete="{{ 'new-password' if register else 'current-password' }}" {% if register %}minlength="12" aria-describedby="password-hint"{% endif %} maxlength="128" required>
+        <button class="password-toggle" type="button" data-password-toggle="password" aria-controls="password" aria-label="Show password" aria-pressed="false">Show</button>
+      </div>
+      {% if register %}
+      <p id="password-hint" class="field-hint">Use 12–128 characters. A few memorable words work well.</p>
+      <label for="password_confirmation">Confirm password</label>
+      <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+      {% endif %}
+      <p id="auth-error" class="form-error" role="alert" tabindex="-1" hidden></p>
+      <button class="auth-submit" type="submit" disabled>{{ 'Create account' if register else 'Log in' }}</button>
+      <noscript><p>Enable JavaScript to {{ 'create an account' if register else 'log in' }}.</p></noscript>
+    </form>
+    <p class="auth-switch">{{ 'Already have an account?' if register else 'New to Common Ground?' }} <a href="{{ '/login' if register else '/register' }}">{{ 'Log in' if register else 'Create an account' }}</a></p>
+  </section>
+</main>
+{% endblock %}
