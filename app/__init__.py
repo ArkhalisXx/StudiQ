@@ -1,1 +1,1 @@
-"""Common Ground local development foundation."""
+"""StudiQ local development foundation."""

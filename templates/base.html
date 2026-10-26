@@ -3,15 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Common Ground — a little space for your next big idea.">
-  <title>{% block title %}Common Ground{% endblock %}</title>
+  <meta name="description" content="StudiQ — find your space to study, focus, and bring your next big idea to life.">
+  <meta name="theme-color" content="#6445c0">
+  <title>{% block title %}StudiQ{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='favicon.svg') }}">
   <script src="{{ url_for('static', path='site.js') }}" defer></script>
   {% block scripts %}{% endblock %}
 </head>
 <body>
   <header class="wrap">
-    <a class="brand" href="/">common ground<span>.</span></a>
+    <a class="brand" href="/" aria-label="StudiQ home">
+      <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true"><rect width="36" height="36" rx="11" fill="currentColor"/><path d="M9 11c4-1 7 0 9 2 2-2 5-3 9-2v15c-4-1-7 0-9 2-2-2-5-3-9-2V11Zm9 2v15" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <span class="brand-word">Studi<span>Q</span></span>
+    </a>
     <nav aria-label="Main navigation">
       <a href="/#availability">Find a space</a>
       {% if user %}
@@ -25,6 +30,6 @@
   </header>
   <p id="site-message" class="wrap site-message" role="alert" hidden></p>
   {% block content %}{% endblock %}
-  <footer class="wrap"><span>Common Ground · CPE3121</span><span>Local baseline · booking and payments unavailable</span></footer>
+  <footer class="wrap"><span>StudiQ · CPE3121</span><span>Local baseline · booking and payments unavailable</span></footer>
 </body>
 </html>

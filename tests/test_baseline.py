@@ -1,4 +1,5 @@
 from datetime import timedelta
+import zoneinfo
 
 import pytest
 from fastapi.testclient import TestClient
@@ -46,6 +47,22 @@ def test_home_catalog_and_assets(baseline):
     assert len(client.get('/api/workspace-types').json()) == 2
     assert query(client).json()['available'] == 8
     assert query(client).json()['reservable'] is False
+
+
+def test_pages_and_availability_without_system_timezone_database(baseline):
+    # Windows typically has no IANA timezone database. Use the installed tzdata package.
+    original_path = zoneinfo.TZPATH
+    zoneinfo.reset_tzpath([])
+    zoneinfo.ZoneInfo.clear_cache()
+    try:
+        client, _ = baseline
+        home = client.get('/')
+        assert home.status_code == 200
+        assert local_today().isoformat() in home.text
+        assert query(client).json()['available'] == 8
+    finally:
+        zoneinfo.reset_tzpath(original_path)
+        zoneinfo.ZoneInfo.clear_cache()
 
 
 def test_seed_is_repeatable_and_preserves_prices(baseline):
