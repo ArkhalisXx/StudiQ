@@ -22,7 +22,7 @@ async def lifespan(application):
     yield
 
 
-app = FastAPI(title='Common Ground', version='0.1.0', lifespan=lifespan)
+app = FastAPI(title='StudiQ', version='0.1.0', lifespan=lifespan)
 app.include_router(router)
 app.include_router(auth_router)
 app.include_router(profile_router)

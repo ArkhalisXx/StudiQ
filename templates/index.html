@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}Common Ground · Find your space{% endblock %}
+{% block title %}StudiQ · Find your space{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', path='app.js') }}" defer></script>{% endblock %}
 {% block content %}
   <main class="wrap">
     <section class="hero">
-      <p class="eyebrow">CO-WORKING, AT YOUR PACE</p>
-      <h1>A little space.<br><em>A lot of possibility.</em></h1>
-      <p class="intro">A desk for deep work. A room for your next big idea. Find a little space to make things happen.</p>
+      <p class="eyebrow">A LITTLE FOCUS. A LOT OF POSSIBILITY.</p>
+      <h1>Your space.<br><em>Your next big idea.</em></h1>
+      <p class="intro">Study for what’s next. Get into your flow. Find a desk or room that gives your ideas a little more space.</p>
+      <ul class="hero-pills" aria-label="Room for every kind of day"><li>Study sessions</li><li>Focused work</li><li>Room to collaborate</li></ul>
       <p class="status"><span aria-hidden="true"></span> Explore availability · reservations are coming soon</p>
     </section>
     <section class="finder" id="availability" aria-labelledby="finder-title">
@@ -17,13 +18,13 @@
         <label for="workspace_type_id">Workspace<select id="workspace_type_id" name="workspace_type_id" required disabled><option value="">Loading…</option></select></label>
         <label for="package_id">Pass<select id="package_id" name="package_id" required disabled><option value="">Loading…</option></select></label>
         <label for="time_slot_id">Time slot<select id="time_slot_id" name="time_slot_id" required disabled><option value="">Loading…</option></select></label>
-        <button type="submit" disabled>Check availability <span aria-hidden="true">↗</span></button>
+        <button type="submit" disabled>Check availability <svg class="button-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </form>
       <p id="availability-result" role="status" aria-live="polite">Loading the workspace catalog…</p>
       <noscript><p>Enable JavaScript to check availability, or use the read-only API.</p></noscript>
     </section>
     <section class="plan" aria-labelledby="plan-title">
-      <div><p class="eyebrow">ONE STEP AT A TIME</p><h2 id="plan-title">A better working day,<br>built from the ground up.</h2></div>
+      <div><p class="eyebrow">GROW WITH STUDIQ</p><h2 id="plan-title">Good days start<br>with the right space.</h2></div>
       <div class="features">
         <article><span>01 / AVAILABLE NOW</span><h3>Explore the space</h3><p>Browse workspace types, compare sample passes, and check availability.</p></article>
         <article><span>02 / ACCOUNTS ARE HERE</span><h3>Make it yours</h3><p>Create your account and log in. Reservations, checkout, and email receipts are coming next.</p></article>

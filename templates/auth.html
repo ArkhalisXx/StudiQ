@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}Common Ground · {{ 'Create account' if register else 'Log in' }}{% endblock %}
+{% block title %}StudiQ · {{ 'Create account' if register else 'Log in' }}{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', path='auth.js') }}" defer></script>{% endblock %}
 {% block content %}
 <main class="wrap auth-layout">
   <section class="auth-intro" aria-labelledby="auth-title">
     <p class="eyebrow">YOUR SPACE STARTS HERE</p>
     <h1 id="auth-title">{{ 'A fresh start.' if register else 'Welcome back.' }}<br><em>{{ 'A place for you.' if register else 'Make yourself at home.' }}</em></h1>
-    <p class="intro">{{ 'Create an account today. Your next great workday starts with a little space.' if register else 'Good to see you again. Log in to your Common Ground account.' }}</p>
-    <p class="status"><span aria-hidden="true"></span> A little space. A lot of possibility.</p>
+    <p class="intro">{{ 'Join StudiQ and make room for your goals. Your next great study session starts here.' if register else 'Good to see you again. Log in to your StudiQ account and find your focus.' }}</p>
+    <p class="status"><span aria-hidden="true"></span> A space for your next chapter.</p>
   </section>
   <section class="auth-card" aria-labelledby="form-title">
-    <p class="eyebrow">COMMON GROUND</p>
+    <p class="eyebrow">STUDIQ</p>
     <h2 id="form-title">{{ 'Create your account' if register else 'Log in' }}</h2>
     <p class="auth-subtitle">{{ 'A few details, and you’re right at home.' if register else 'Enter your details to pick up where you left off.' }}</p>
     <form id="auth-form" class="auth-form" data-mode="{{ 'register' if register else 'login' }}" method="post" action="/api/auth/{{ 'register' if register else 'login' }}">
@@ -34,7 +34,7 @@
       <button class="auth-submit" type="submit" disabled>{{ 'Create account' if register else 'Log in' }}</button>
       <noscript><p>Enable JavaScript to {{ 'create an account' if register else 'log in' }}.</p></noscript>
     </form>
-    <p class="auth-switch">{{ 'Already have an account?' if register else 'New to Common Ground?' }} <a href="{{ '/login' if register else '/register' }}">{{ 'Log in' if register else 'Create an account' }}</a></p>
+    <p class="auth-switch">{{ 'Already have an account?' if register else 'New to StudiQ?' }} <a href="{{ '/login' if register else '/register' }}">{{ 'Log in' if register else 'Create an account' }}</a></p>
   </section>
 </main>
 {% endblock %}

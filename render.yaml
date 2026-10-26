@@ -1,7 +1,7 @@
 # Optional later deployment. Local development uses sh start.sh.
 services:
   - type: web
-    name: common-ground
+    name: studiq
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
