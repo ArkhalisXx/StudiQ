@@ -2,17 +2,19 @@
 {% block title %}StudiQ · Find your space{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', path='app.js') }}" defer></script>{% endblock %}
 {% block content %}
-  <main class="wrap">
+  <main class="wrap" id="main-content">
     <section class="hero">
+      <div class="hero-copy">
       <p class="eyebrow">A LITTLE FOCUS. A LOT OF POSSIBILITY.</p>
       <h1>Your space.<br><em>Your next big idea.</em></h1>
       <p class="intro">Study for what’s next. Get into your flow. Find a desk or room that gives your ideas a little more space.</p>
-      <ul class="hero-pills" aria-label="Room for every kind of day"><li>Study sessions</li><li>Focused work</li><li>Room to collaborate</li></ul>
-      <p class="status"><span aria-hidden="true"></span> Explore availability · reservations are coming soon</p>
+      <div class="hero-actions"><a class="button-link" href="#availability">Find my space <span aria-hidden="true">&rarr;</span></a><a class="text-link" href="{{ '/account' if user else '/register' }}">{{ 'My account' if user else 'Make yourself at home' }} <svg class="button-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 12 8-8M4 4h8v8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+      <p class="hero-note"><span class="status-dot" aria-hidden="true"></span> A desk for deep work. A room for your next chapter.</p>
+      </div>
+      <figure class="hero-art">{% include 'illustration.html' %}<figcaption><span class="caption-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="currentColor"/></svg></span><div><strong>Big ideas welcome.</strong><span>Find a little room to think.</span></div><span class="art-tag">YOUR FOCUS ZONE</span></figcaption></figure>
     </section>
     <section class="finder" id="availability" aria-labelledby="finder-title">
-      <div class="finder-heading"><div><p class="eyebrow">MAKE ROOM FOR YOUR DAY</p><h2 id="finder-title">Find your space.</h2></div><p>Morning 09:00–12:00<br>Afternoon 13:00–16:00 · Manila time</p></div>
-      <p class="notice">Sample inventory and prices for local development. This check does not reserve a workspace.</p>
+      <div class="finder-heading"><div><p class="eyebrow">LET’S PLAN A GOOD DAY</p><h2 id="finder-title">Find your space.</h2></div><p><span class="schedule-label">TWO WAYS TO MAKE TIME</span><span>Morning <b>09:00–12:00</b></span><span>Afternoon <b>13:00–16:00</b></span><small>Manila time</small></p></div>
       <form id="availability-form">
         <label for="booking_date">Date<input type="date" id="booking_date" name="booking_date" value="{{ today }}" min="{{ today }}" required></label>
         <label for="workspace_type_id">Workspace<select id="workspace_type_id" name="workspace_type_id" required disabled><option value="">Loading…</option></select></label>
@@ -21,14 +23,15 @@
         <button type="submit" disabled>Check availability <svg class="button-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </form>
       <p id="availability-result" role="status" aria-live="polite">Loading the workspace catalog…</p>
+      <p class="notice finder-disclaimer">Sample inventory and prices for local development. Checking availability does not reserve a workspace.</p>
       <noscript><p>Enable JavaScript to check availability, or use the read-only API.</p></noscript>
     </section>
     <section class="plan" aria-labelledby="plan-title">
-      <div><p class="eyebrow">GROW WITH STUDIQ</p><h2 id="plan-title">Good days start<br>with the right space.</h2></div>
+      <div class="section-heading"><div><p class="eyebrow">YOUR DAY, WITH A LITTLE MORE ROOM</p><h2 id="plan-title">Less searching.<br>More getting things done.</h2></div><p>From finding your focus to making it yours,<br>we’re building a better way to spend your day.</p></div>
       <div class="features">
-        <article><span>01 / AVAILABLE NOW</span><h3>Explore the space</h3><p>Browse workspace types, compare sample passes, and check availability.</p></article>
-        <article><span>02 / ACCOUNTS ARE HERE</span><h3>Make it yours</h3><p>Create your account and log in. Reservations, checkout, and email receipts are coming next.</p></article>
-        <article><span>03 / ON THE ROADMAP</span><h3>Manage the day</h3><p>Staff allocation grids, check-ins, member records, and maintenance blocks.</p></article>
+        <article><div class="feature-top"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 11h16m-12 4h3m2 0h3"/></svg><span>01 / EXPLORE</span></div><h3>A space that fits.</h3><p>A quiet desk or a little room to collaborate. Explore your options and check what’s available.</p><a class="text-link" href="#availability">Find a space <span aria-hidden="true">&rarr;</span></a></article>
+        <article><div class="feature-top"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>02 / BELONG</span></div><h3>Make yourself at home.</h3><p>Your own little corner of StudiQ. Create an account, settle in, and get ready for what’s next.</p><a class="text-link" href="{{ '/account' if user else '/register' }}">{{ 'My account' if user else 'Create an account' }} <span aria-hidden="true">&rarr;</span></a></article>
+        <article><div class="feature-top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5L21 9.4l-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.3-.9Z"/></svg><span>03 / GROW</span></div><h3>Good things ahead.</h3><p>Easy reservations, secure checkout, and a smoother day for everyone. We’re just getting started.</p><span class="coming-soon">On the horizon</span></article>
       </div>
     </section>
   </main>
