@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import time, timedelta
 import zoneinfo
 
 import pytest
@@ -104,6 +104,26 @@ def test_day_pass_requires_same_workspace_and_hides_private_data(baseline):
 ])
 def test_invalid_availability(baseline, changes, status):
     assert query(baseline[0], **changes).status_code == status
+
+
+@pytest.mark.parametrize('field', ['workspace_type_id', 'package_id', 'time_slot_id'])
+def test_oversized_catalog_ids_return_validation_errors(baseline, field):
+    response = query(baseline[0], **{field: 2**63})
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize('slot_count', [0, 1, 3])
+def test_day_pass_requires_complete_schedule(baseline, slot_count):
+    client, engine = baseline
+    with Session(engine) as session, session.begin():
+        slots = session.scalars(select(TimeSlot).order_by(TimeSlot.id)).all()
+        for slot in slots[slot_count:]:
+            session.delete(slot)
+        if slot_count == 3:
+            session.add(TimeSlot(label='Evening', starts_at=time(17), ends_at=time(20)))
+    response = query(client, package_id=2)
+    assert response.status_code == 503
+    assert 'available' not in response.json()
 
 
 @pytest.mark.parametrize('duplicate,both_owners', [(True, False), (False, True), (False, False)])

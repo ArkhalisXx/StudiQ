@@ -10,6 +10,8 @@ from app.models import Package, TimeSlot, WorkspaceType
 from app.services.availability import available_count
 
 router = APIRouter(prefix='/api')
+# Reject values the local database cannot bind as an integer.
+MAX_CATALOG_ID = 2**63 - 1
 
 
 def local_today():
@@ -36,9 +38,9 @@ def time_slots(session: Session = Depends(get_session)):
 @router.get('/workspaces/availability')
 def availability(
     booking_date: date,
-    workspace_type_id: int = Query(gt=0),
-    package_id: int = Query(gt=0),
-    time_slot_id: int | None = Query(default=None, gt=0),
+    workspace_type_id: int = Query(gt=0, le=MAX_CATALOG_ID),
+    package_id: int = Query(gt=0, le=MAX_CATALOG_ID),
+    time_slot_id: int | None = Query(default=None, gt=0, le=MAX_CATALOG_ID),
     session: Session = Depends(get_session),
 ):
     if booking_date < local_today():
@@ -52,6 +54,9 @@ def availability(
         slots = [slot for slot in slots if slot.id == time_slot_id]
         if not slots:
             raise HTTPException(422, 'Select a valid time slot for the 3-Hour Pass.')
+    elif len(slots) != 2:
+        # A Day Pass must cover both fixed slots, never an empty or partial schedule.
+        raise HTTPException(503, 'The daily schedule is unavailable. Please try again later.')
     count = available_count(session, booking_date, category.id, [slot.id for slot in slots])
     return dict(booking_date=booking_date, workspace_type=category.name, package=package.name,
                 available=count, slots=[slot.label for slot in slots], reservable=False,

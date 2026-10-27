@@ -1,4 +1,5 @@
 from datetime import timedelta
+import json
 
 import pytest
 from fastapi.testclient import TestClient
@@ -71,6 +72,64 @@ def test_duplicate_email_is_case_insensitive(accounts):
     assert register(client, email='MEMBER@EXAMPLE.COM').status_code == 409
     with Session(engine) as session:
         assert session.scalar(select(func.count()).select_from(User)) == 1
+
+
+@pytest.mark.parametrize('surrogate', ['\ud800', '\udfff'])
+def test_invalid_unicode_password_is_rejected_without_a_server_error(accounts, surrogate):
+    client, engine = accounts
+    password = PASSWORD + surrogate
+    payload = {**ACCOUNT, 'password': password, 'password_confirmation': password}
+    # JSON escapes can carry a lone surrogate even though ordinary UTF-8 cannot.
+    response = client.post('/api/auth/register', content=json.dumps(payload),
+                           headers={'Content-Type': 'application/json'})
+    assert response.status_code == 422
+    assert 'invalid Unicode characters' in response.text
+    assert PASSWORD not in response.text
+    assert COOKIE_NAME not in client.cookies
+    with Session(engine) as session:
+        assert session.scalar(select(func.count()).select_from(User)) == 0
+
+
+@pytest.mark.parametrize('surrogate', ['\ud800', '\udfff'])
+def test_invalid_unicode_name_is_rejected_before_creating_an_account(accounts, surrogate):
+    client, engine = accounts
+    payload = {**ACCOUNT, 'full_name': 'Member' + surrogate}
+    response = client.post('/api/auth/register', content=json.dumps(payload),
+                           headers={'Content-Type': 'application/json'})
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['type'] == 'string_unicode'
+    assert PASSWORD not in response.text
+    assert COOKIE_NAME not in client.cookies
+    with Session(engine) as session:
+        assert session.scalar(select(func.count()).select_from(User)) == 0
+
+
+@pytest.mark.parametrize('scheme,host,origin', [
+    ('http', 'testserver:80', 'http://testserver'),
+    ('http', 'testserver', 'http://testserver:80'),
+    ('http', 'TESTSERVER:80', 'http://testserver'),
+    ('https', 'testserver:443', 'https://testserver'),
+    ('https', 'testserver', 'https://testserver:443'),
+])
+def test_equivalent_origins_allow_authentication(accounts, scheme, host, origin):
+    client, _ = accounts
+    response = client.post(f'{scheme}://testserver/api/auth/register', json=ACCOUNT,
+                           headers={'Host': host, 'Origin': origin})
+    assert response.status_code == 201
+
+
+@pytest.mark.parametrize('origin', [
+    'https://testserver',
+    'http://testserver:8001',
+    'http://evil.example@testserver',
+    'http://testserver/extra',
+    'http://testserver?extra',
+    'http://testserver#extra',
+    'http://testserver:bad',
+])
+def test_origin_normalization_does_not_allow_different_or_malformed_origins(accounts, origin):
+    client, _ = accounts
+    assert client.post('/api/auth/register', json=ACCOUNT, headers={'Origin': origin}).status_code == 403
 
 
 @pytest.mark.parametrize('changes', [

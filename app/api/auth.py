@@ -1,6 +1,7 @@
 from collections import defaultdict, deque
 from threading import Lock
 from time import monotonic
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator, model_validator
@@ -14,11 +15,26 @@ from app.services.auth import (COOKIE_NAME, DUMMY_PASSWORD_HASH, create_session,
                                public_user, require_user, token_hash, utc_now, verify_password)
 
 
+def origin_tuple(value):
+    """Compare browser origins by scheme, hostname and effective port."""
+    parsed = urlsplit(value)
+    if (parsed.scheme not in {'http', 'https'} or not parsed.hostname
+            or parsed.username is not None or parsed.password is not None
+            or parsed.path or parsed.query or parsed.fragment):
+        raise ValueError('Invalid origin')
+    port = parsed.port if parsed.port is not None else {'http': 80, 'https': 443}[parsed.scheme]
+    return parsed.scheme, parsed.hostname, port
+
+
 def same_origin(request: Request):
     # Protect login, registration and logout from cross-site requests, including login CSRF.
     # Browser JSON POSTs supply Origin automatically; nonbrowser clients must send it explicitly.
-    expected = f'{request.url.scheme}://{request.url.netloc}'
-    if request.headers.get('origin') != expected:
+    try:
+        expected = f'{request.url.scheme}://{request.url.netloc}'
+        matches = origin_tuple(request.headers.get('origin', '')) == origin_tuple(expected)
+    except ValueError:
+        matches = False
+    if not matches:
         raise HTTPException(403, 'Please submit this request from this website.')
 
 
@@ -74,8 +90,13 @@ class LoginInput(BaseModel):
     @field_validator('password')
     @classmethod
     def bound_password(cls, value):
-        if not 1 <= len(value.get_secret_value()) <= 128:
+        password = value.get_secret_value()
+        if not 1 <= len(password) <= 128:
             raise ValueError('Password must be between 1 and 128 characters.')
+        try:
+            password.encode('utf-8')
+        except UnicodeEncodeError:
+            raise ValueError('Password contains invalid Unicode characters.') from None
         return value
 
 
