@@ -41,12 +41,17 @@ authForm.addEventListener('submit', async event => {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
     });
-    const body = await response.json();
+    if (response.status >= 500) throw new Error('The server is temporarily unavailable. Please try again shortly.');
+    const body = await response.json().catch(() => null);
     if (!response.ok) {
-      const message = Array.isArray(body.detail)
-        ? body.detail.map(error => error.msg.replace(/^Value error, /, '')).join(' ')
-        : body.detail;
+      const detail = body?.detail;
+      const message = Array.isArray(detail)
+        ? detail.filter(error => typeof error?.msg === 'string').map(error => error.msg.replace(/^Value error, /, '')).join(' ')
+        : typeof detail === 'string' ? detail : '';
       throw new Error(message || 'Unable to continue. Please try again.');
+    }
+    if (!body || typeof body.id !== 'string') {
+      throw new Error('The server returned an unexpected response. Please try again.');
     }
     // Never store credentials or session tokens in localStorage or browser URLs.
     authForm.reset();
