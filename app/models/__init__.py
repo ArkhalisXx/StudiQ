@@ -1,11 +1,12 @@
-"""Initial inventory model. Future booking writes must use SlotAllocation transactions."""
+"""Inventory, account, and reservation models."""
 from datetime import date, time
 
 from sqlalchemy import Boolean, CheckConstraint, Date, ForeignKey, Integer, String, Time, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
-from app.models.account import AuthSession, User
+from app.models.account import AdminGrant, AuthSession, User
+from app.models.reservations import Booking, BookingSlot, MaintenanceBlock, MaintenanceSlot
 
 
 class WorkspaceType(Base):
@@ -54,6 +55,5 @@ class SlotAllocation(Base):
     booking_date: Mapped[date] = mapped_column(Date)
     workspace_id: Mapped[int] = mapped_column(ForeignKey('workspaces.id'))
     time_slot_id: Mapped[int] = mapped_column(ForeignKey('time_slots.id'))
-    # Future migrations will add booking/maintenance tables and foreign keys.
-    booking_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
-    maintenance_block_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    booking_id: Mapped[str | None] = mapped_column(ForeignKey('bookings.id'), nullable=True)
+    maintenance_block_id: Mapped[str | None] = mapped_column(ForeignKey('maintenance_blocks.id'), nullable=True)

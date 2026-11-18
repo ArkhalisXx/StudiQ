@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_session
 from app.models import Package, TimeSlot, WorkspaceType
 from app.services.availability import available_count
+from app.services.reservations import begin_write, expire_holds, slots_have_started
 
 router = APIRouter(prefix='/api')
 # Reject values the local database cannot bind as an integer.
@@ -43,21 +44,25 @@ def availability(
     time_slot_id: int | None = Query(default=None, gt=0, le=MAX_CATALOG_ID),
     session: Session = Depends(get_session),
 ):
-    if booking_date < local_today():
-        raise HTTPException(422, 'Choose today or a future date.')
-    category = session.get(WorkspaceType, workspace_type_id)
-    package = session.get(Package, package_id)
-    if category is None or package is None or not package.is_active:
-        raise HTTPException(404, 'Workspace type or active pass not found.')
-    slots = session.scalars(select(TimeSlot).order_by(TimeSlot.starts_at)).all()
-    if package.slot_policy == 'single':
-        slots = [slot for slot in slots if slot.id == time_slot_id]
-        if not slots:
-            raise HTTPException(422, 'Select a valid time slot for the 3-Hour Pass.')
-    elif len(slots) != 2:
-        # A Day Pass must cover both fixed slots, never an empty or partial schedule.
-        raise HTTPException(503, 'The daily schedule is unavailable. Please try again later.')
-    count = available_count(session, booking_date, category.id, [slot.id for slot in slots])
-    return dict(booking_date=booking_date, workspace_type=category.name, package=package.name,
-                available=count, slots=[slot.label for slot in slots], reservable=False,
-                message='Availability only. Booking and checkout are coming in a later stage.')
+    with begin_write(session):
+        expire_holds(session)
+        if booking_date < local_today():
+            raise HTTPException(422, 'Choose today or a future date.')
+        category = session.get(WorkspaceType, workspace_type_id)
+        package = session.get(Package, package_id)
+        if category is None or package is None or not package.is_active:
+            raise HTTPException(404, 'Workspace type or active pass not found.')
+        slots = session.scalars(select(TimeSlot).order_by(TimeSlot.starts_at)).all()
+        if package.slot_policy == 'single':
+            slots = [slot for slot in slots if slot.id == time_slot_id]
+            if not slots:
+                raise HTTPException(422, 'Select a valid time slot for the 3-Hour Pass.')
+        elif len(slots) != 2:
+            raise HTTPException(503, 'The daily schedule is unavailable. Please try again later.')
+        started = slots_have_started(booking_date, slots)
+        count = 0 if started else available_count(session, booking_date, category.id, [slot.id for slot in slots])
+        message = ('Choose a later date or time slot; this visit has already started.' if started else
+                   'You can hold an available space for up to 15 minutes. Staff can confirm it for on-site payment.')
+        return dict(booking_date=booking_date, workspace_type=category.name, package=package.name,
+                    available=count, slots=[slot.label for slot in slots], reservable=count > 0,
+                    message=message)

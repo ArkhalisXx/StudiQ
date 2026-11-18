@@ -21,6 +21,8 @@
     <nav aria-label="Main navigation">
       <a href="/#availability"{% if request.url.path == '/' %} aria-current="page"{% endif %}>Find a space</a>
       {% if user %}
+      <a href="/bookings"{% if request.url.path == '/bookings' %} aria-current="page"{% endif %}>My bookings</a>
+      {% if is_admin %}<a href="/admin"{% if request.url.path == '/admin' %} aria-current="page"{% endif %}>Admin</a>{% endif %}
       <a href="/account"{% if request.url.path == '/account' %} aria-current="page"{% endif %}>My account</a>
       <button class="nav-button" type="button" data-logout>Log out</button>
       {% else %}
@@ -31,6 +33,6 @@
   </header>
   <p id="site-message" class="wrap site-message" role="alert" hidden></p>
   {% block content %}{% endblock %}
-  <footer class="wrap"><div><strong>StudiQ<span>.</span></strong><span>A little space for your next chapter.</span></div><p><span class="status-dot" aria-hidden="true"></span> Reservations are coming soon</p></footer>
+  <footer class="wrap"><div><strong>StudiQ<span>.</span></strong><span>A little space for your next chapter.</span></div><p><span class="status-dot" aria-hidden="true"></span> Reserve online · arrange payment with staff</p></footer>
 </body>
 </html>

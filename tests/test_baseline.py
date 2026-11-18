@@ -10,8 +10,10 @@ from sqlalchemy.orm import Session
 from app.api.catalog import local_today
 from app.database import get_session, make_engine
 from app.main import app
-from app.models import Package, SlotAllocation, TimeSlot, Workspace, WorkspaceType
+from app.models import (Booking, MaintenanceBlock, Package, SlotAllocation,
+                        TimeSlot, User, Workspace, WorkspaceType)
 from app.seed import initialize
+from app.services.auth import utc_now
 
 
 @pytest.fixture
@@ -29,9 +31,33 @@ def baseline(tmp_path):
 
 
 def query(client, **overrides):
-    params = dict(booking_date=local_today().isoformat(), workspace_type_id=1, package_id=1, time_slot_id=1)
+    params = dict(booking_date=visit_day().isoformat(), workspace_type_id=1, package_id=1, time_slot_id=1)
     params.update(overrides)
     return client.get('/api/workspaces/availability', params=params)
+
+
+def visit_day():
+    return local_today() + timedelta(days=1)
+
+
+def allocation_owner(session, owner_id, workspace_id=1, maintenance=False):
+    user = session.get(User, 'allocation-test-user')
+    if user is None:
+        user = User(id='allocation-test-user', full_name='Allocation test', email='allocation@example.com',
+                    password_hash='unused-test-hash', created_at=utc_now())
+        session.add(user)
+        session.flush()
+    if maintenance:
+        owner = MaintenanceBlock(id=owner_id, workspace_id=workspace_id, booking_date=visit_day(),
+                                 reason='Test maintenance', created_by=user.id, created_at=utc_now())
+    else:
+        workspace = session.get(Workspace, workspace_id)
+        owner = Booking(id=owner_id, customer_id=user.id, requested_type_id=workspace.workspace_type_id,
+                        package_id=1, workspace_id=workspace_id, booking_date=visit_day(),
+                        status='confirmed', price_minor=15000, package_name='3-Hour Pass',
+                        slot_policy='single', created_at=utc_now())
+    session.add(owner)
+    session.flush()
 
 
 def test_home_catalog_and_assets(baseline):
@@ -46,7 +72,7 @@ def test_home_catalog_and_assets(baseline):
     assert len(client.get('/api/time-slots').json()) == 2
     assert len(client.get('/api/workspace-types').json()) == 2
     assert query(client).json()['available'] == 8
-    assert query(client).json()['reservable'] is False
+    assert query(client).json()['reservable'] is True
 
 
 def test_pages_and_availability_without_system_timezone_database(baseline):
@@ -82,9 +108,11 @@ def test_day_pass_requires_same_workspace_and_hides_private_data(baseline):
         desks = session.scalars(select(Workspace).where(Workspace.workspace_type_id == 1).order_by(Workspace.id)).all()
         for desk in desks[2:]:
             desk.is_active = False
+        allocation_owner(session, 'private-customer-id', desks[0].id)
+        allocation_owner(session, 'private-maintenance-id', desks[1].id, maintenance=True)
         session.add_all([
-            SlotAllocation(booking_date=local_today(), workspace_id=desks[0].id, time_slot_id=1, booking_id='private-customer-id'),
-            SlotAllocation(booking_date=local_today(), workspace_id=desks[1].id, time_slot_id=2, maintenance_block_id='private-maintenance-id'),
+            SlotAllocation(booking_date=visit_day(), workspace_id=desks[0].id, time_slot_id=1, booking_id='private-customer-id'),
+            SlotAllocation(booking_date=visit_day(), workspace_id=desks[1].id, time_slot_id=2, maintenance_block_id='private-maintenance-id'),
         ])
     assert query(client).json()['available'] == 1
     assert query(client, time_slot_id=2).json()['available'] == 1
@@ -131,9 +159,14 @@ def test_allocation_constraints(baseline, duplicate, both_owners):
     _, engine = baseline
     with Session(engine) as session:
         if duplicate:
-            session.add(SlotAllocation(booking_date=local_today(), workspace_id=1, time_slot_id=1, booking_id='first'))
+            allocation_owner(session, 'first')
+            session.add(SlotAllocation(booking_date=visit_day(), workspace_id=1, time_slot_id=1, booking_id='first'))
             session.commit()
-        session.add(SlotAllocation(booking_date=local_today(), workspace_id=1, time_slot_id=1,
+        if duplicate or both_owners:
+            allocation_owner(session, 'second')
+        if both_owners:
+            allocation_owner(session, 'maintenance', maintenance=True)
+        session.add(SlotAllocation(booking_date=visit_day(), workspace_id=1, time_slot_id=1,
                                   booking_id='second' if duplicate or both_owners else None,
                                   maintenance_block_id='maintenance' if both_owners else None))
         with pytest.raises(IntegrityError):
@@ -142,6 +175,7 @@ def test_allocation_constraints(baseline, duplicate, both_owners):
 
 def test_foreign_keys_enforced(baseline):
     with Session(baseline[1]) as session:
-        session.add(SlotAllocation(booking_date=local_today(), workspace_id=999, time_slot_id=1, booking_id='invalid'))
+        allocation_owner(session, 'valid-booking')
+        session.add(SlotAllocation(booking_date=visit_day(), workspace_id=999, time_slot_id=1, booking_id='valid-booking'))
         with pytest.raises(IntegrityError):
             session.commit()
