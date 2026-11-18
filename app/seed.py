@@ -4,12 +4,13 @@ from datetime import time
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.database import Base, engine
+from app.database import engine
+from app.migrations import upgrade
 from app.models import Package, TimeSlot, Workspace, WorkspaceType
 
 
 def initialize(target=engine):
-    Base.metadata.create_all(target)
+    upgrade(target)
     with Session(target) as session, session.begin():
         for name, kind, prefix, count in [('Shared desk', 'desk', 'DESK', 8), ('Private room', 'room', 'ROOM', 2)]:
             category = session.scalar(select(WorkspaceType).where(WorkspaceType.name == name))

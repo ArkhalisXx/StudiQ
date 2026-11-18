@@ -10,7 +10,7 @@
     <div class="profile-heading"><span class="profile-avatar" aria-hidden="true">{{ user.full_name[:1]|upper }}</span><div><p class="eyebrow">YOUR CORNER OF STUDIQ</p><h2 id="details-title">Your details</h2></div></div>
     <dl><dt>Full name</dt><dd>{{ user.full_name }}</dd><dt>Email address</dt><dd>{{ user.email }}</dd></dl>
   </section>
-  <aside class="account-next"><p class="eyebrow">A LITTLE ROOM FOR POSSIBILITY</p><h2>Your next great day<br>starts with a space.</h2><p>Explore our desks and rooms, compare passes, and find a time that works for you.</p><a class="button-link" href="/#availability">Find a space <span aria-hidden="true">&rarr;</span></a><span class="account-note">Reservations are coming soon.</span></aside>
+  <aside class="account-next"><p class="eyebrow">A LITTLE ROOM FOR POSSIBILITY</p><h2>Your next great day<br>starts with a space.</h2><p>Explore our desks and rooms, compare passes, and find a time that works for you.</p><div class="card-actions"><a class="button-link" href="/#availability">Find a space <span aria-hidden="true">&rarr;</span></a><a class="text-link" href="/bookings">My bookings</a></div><span class="account-note">Pending reservations must be confirmed by staff before the hold expires.</span></aside>
   </div>
 </main>
 {% endblock %}

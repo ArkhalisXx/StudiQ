@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}StudiQ · Admin{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='admin.js') }}" defer></script>{% endblock %}
+{% block content %}
+<main class="wrap booking-page" id="main-content">
+  <div class="page-heading"><div><p class="eyebrow">STUDIQ OPERATIONS</p><h1>A smoother <em>day.</em></h1><p class="intro">Manage spaces, arrivals, and the people who make StudiQ.</p></div></div>
+  <nav class="section-nav" aria-label="Admin sections"><a href="#allocations">Space allocations</a><a href="#roster">Daily roster</a><a href="#maintenance">Maintenance</a><a href="#members">Members</a></nav>
+  <form id="admin-date-form" class="admin-date-form"><label for="admin-date">Booking date · Manila<input id="admin-date" name="booking_date" type="date" value="{{ today }}" required></label><button type="submit">Load day</button></form>
+  <p id="admin-status" role="status" aria-live="polite">Loading the daily view…</p><p id="admin-error" class="form-error" role="alert" hidden></p>
+  <section class="admin-section" id="allocations" aria-labelledby="allocations-title"><div class="section-heading"><div><p class="eyebrow">THE SPACE AT A GLANCE</p><h2 id="allocations-title">Space allocations</h2></div><p>One workspace, one allocation per slot.</p></div><div id="allocation-grid" class="table-scroll" tabindex="0" role="region" aria-label="Workspace allocation table"></div></section>
+  <section class="admin-section" id="roster" aria-labelledby="roster-title"><p class="eyebrow">WHO’S COMING IN</p><h2 id="roster-title">Daily roster</h2><p class="notice">Confirm for on-site payment before a hold expires. Confirmation does not record an online payment. Check-in is available during the visit.</p><div id="admin-roster" class="booking-list"></div></section>
+  <section class="admin-section" id="maintenance" aria-labelledby="maintenance-title"><p class="eyebrow">A LITTLE TIME TO RESET</p><h2 id="maintenance-title">Block a workspace</h2><p class="notice">A maintenance block uses the same inventory as reservations. It cannot overlap an occupied slot. Use the release button in the allocation grid to remove a block.</p>
+    <form id="maintenance-form" class="maintenance-form"><label for="maintenance-workspace">Workspace<select id="maintenance-workspace" required disabled><option value="">Load a day first</option></select></label><fieldset><legend>Slots to block</legend><div id="maintenance-slots" class="slot-checkboxes"></div></fieldset><label for="maintenance-reason">Reason<input id="maintenance-reason" maxlength="240" placeholder="For example: desk repair" required></label><button type="submit" disabled>Create maintenance block</button></form>
+    <p id="maintenance-result" role="status" aria-live="polite"></p>
+  </section>
+  <section class="admin-section" id="members" aria-labelledby="members-title"><p class="eyebrow">THE STUDIQ COMMUNITY</p><h2 id="members-title">Member directory</h2><p class="notice">Booking totals are calculated from reservation history.</p><div id="member-list" class="table-scroll" tabindex="0" role="region" aria-label="Member directory table"></div></section>
+  <noscript><p>Enable JavaScript to use the admin dashboard.</p></noscript>
+</main>
+{% endblock %}

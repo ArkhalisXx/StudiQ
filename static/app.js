@@ -4,19 +4,52 @@ const result = document.querySelector('#availability-result');
 const pass = form.elements.package_id;
 const slot = form.elements.time_slot_id;
 const submit = form.querySelector('button');
+const review = document.querySelector('#booking-review');
+const reserveSubmit = document.querySelector('#reserve-submit');
+const reserveLogin = document.querySelector('#reserve-login');
+const reserveResult = document.querySelector('#reserve-result');
 let packages = [];
+let timeSlots = [];
 let selectedSingleSlot = '';
 let selectionVersion = 0;
+let checkedSelection = null;
+
+function clearReview() {
+  checkedSelection = null;
+  review.hidden = true;
+  reserveResult.replaceChildren();
+}
+
+function showReview(data) {
+  clearReview();
+  if (data.reservable !== true || data.available < 1) return;
+  const chosenPass = packages.find(p => String(p.id) === pass.value);
+  const selectedSlots = chosenPass.slot_policy === 'day' ? timeSlots : timeSlots.filter(s => String(s.id) === slot.value);
+  const payload = {booking_date: form.elements.booking_date.value,
+    workspace_type_id: Number(form.elements.workspace_type_id.value), package_id: Number(pass.value)};
+  if (chosenPass.slot_policy === 'single') payload.time_slot_id = Number(slot.value);
+  checkedSelection = {payload, version: selectionVersion};
+  document.querySelector('#review-date').textContent = data.booking_date;
+  document.querySelector('#review-type').textContent = data.workspace_type;
+  document.querySelector('#review-pass').textContent = chosenPass.name;
+  document.querySelector('#review-slots').textContent = selectedSlots.map(s => `${s.label} ${s.starts_at}–${s.ends_at}`).join(' + ');
+  document.querySelector('#review-price').textContent = new Intl.NumberFormat('en-PH', {style: 'currency', currency: chosenPass.currency}).format(chosenPass.price_minor / 100);
+  const authenticated = form.dataset.authenticated === 'true';
+  reserveSubmit.hidden = !authenticated;
+  reserveSubmit.disabled = false;
+  reserveLogin.hidden = authenticated;
+  review.hidden = false;
+}
 
 function showResult(message, state = 'idle') {
   result.textContent = message;
   result.dataset.state = state;
 }
 
-async function getJSON(url) {
+async function getJSON(url, options) {
   let response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, options);
   } catch {
     throw new Error('Could not reach the server. Check your connection and try again.');
   }
@@ -70,6 +103,7 @@ async function loadCatalog() {
       throw new Error('The workspace catalog is not ready yet.');
     }
     packages = passes;
+    timeSlots = slots;
     fill(form.elements.workspace_type_id, types, t => t.name);
     fill(pass, passes, p => `${p.name} · ${new Intl.NumberFormat('en-PH', {style: 'currency', currency: p.currency}).format(p.price_minor / 100)}`);
     fill(slot, slots, s => `${s.label} · ${s.starts_at}–${s.ends_at}`);
@@ -83,12 +117,14 @@ async function loadCatalog() {
 pass.addEventListener('change', updateSlot);
 form.addEventListener('input', () => {
   selectionVersion += 1;
+  clearReview();
   showResult('Selections changed. Check availability for the latest result.');
 });
 form.addEventListener('submit', async event => {
   event.preventDefault();
   if (submit.disabled) return;
   const version = selectionVersion;
+  clearReview();
   submit.disabled = true;
   form.setAttribute('aria-busy', 'true');
   showResult('Checking availability…', 'loading');
@@ -102,11 +138,34 @@ form.addEventListener('submit', async event => {
       throw new Error('The server returned an unexpected response. Please refresh and try again.');
     }
     showResult(`${data.available} ${data.workspace_type.toLowerCase()} space${data.available === 1 ? '' : 's'} available on ${data.booking_date} · ${data.slots.join(' + ')}. ${data.message}`, data.available > 0 ? 'success' : 'empty');
+    showReview(data);
   } catch (error) {
     if (version === selectionVersion) showResult(`Unable to check availability. ${error.message}`, 'error');
   } finally {
     submit.disabled = false;
     form.removeAttribute('aria-busy');
+  }
+});
+reserveSubmit.addEventListener('click', async () => {
+  if (reserveSubmit.disabled || !checkedSelection || checkedSelection.version !== selectionVersion) return;
+  const payload = checkedSelection.payload;
+  const controls = Array.from(form.elements).map(control => [control, control.disabled]);
+  controls.forEach(([control]) => { control.disabled = true; });
+  reserveSubmit.disabled = true;
+  reserveResult.textContent = 'Reserving your space…';
+  try {
+    const booking = await getJSON('/api/bookings', {method: 'POST', credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
+    if (!booking || typeof booking.id !== 'string') throw new Error('Please check My bookings to see whether your reservation was created.');
+    window.location.assign('/bookings');
+  } catch (error) {
+    checkedSelection = null;
+    reserveResult.textContent = `${error.message} Check My bookings before trying again, then check availability again.`;
+    const link = document.createElement('a');
+    link.href = '/bookings'; link.className = 'text-link'; link.textContent = 'View my bookings';
+    reserveResult.append(document.createTextNode(' '), link);
+  } finally {
+    controls.forEach(([control, disabled]) => { control.disabled = disabled; });
   }
 });
 loadCatalog();
