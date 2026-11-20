@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import Base, make_engine
-from app.migrations import MigrationError
+from app.migrations import MigrationError, SCHEMA_VERSION
 from app.models import (ActiveCheckout, AdminGrant, AuthSession, Booking, BookingSlot,
                         EmailReceipt, Package, PaymentAttempt, PaymentEvent, SlotAllocation,
                         TimeSlot, User, Workspace, WorkspaceType)
@@ -16,7 +16,8 @@ from app.seed import initialize
 
 def version_two_database(tmp_path):
     target = make_engine(f'sqlite:///{tmp_path / "receipts.db"}')
-    tables = [table for table in Base.metadata.sorted_tables if table.name != 'email_receipts']
+    tables = [table for table in Base.metadata.sorted_tables
+              if table.name not in {'email_receipts', 'menu_items'}]
     Base.metadata.create_all(target, tables=tables)
     with target.begin() as connection:
         connection.exec_driver_sql('''CREATE TABLE schema_migrations (
@@ -105,7 +106,7 @@ def test_receipt_upgrade_preserves_paid_data_and_active_checkout(tmp_path):
         assert session.get(PaymentEvent, 'evt_paid').outcome == 'confirmed'
         assert session.scalar(select(EmailReceipt)) is None
     with target.connect() as connection:
-        assert connection.exec_driver_sql('SELECT version FROM schema_migrations ORDER BY version').scalars().all() == [1, 2, 3]
+        assert connection.exec_driver_sql('SELECT version FROM schema_migrations ORDER BY version').scalars().all() == list(range(1, SCHEMA_VERSION + 1))
         assert connection.exec_driver_sql('SELECT applied_at FROM schema_migrations WHERE version = 2').scalar() == '2026-11-20T12:00:00Z'
         assert connection.exec_driver_sql('PRAGMA foreign_key_check').all() == []
     assert not (tmp_path / 'backups').exists()
@@ -190,5 +191,5 @@ def test_fresh_database_includes_receipt_schema(tmp_path):
     initialize(target)
     assert 'email_receipts' in inspect(target).get_table_names()
     with target.connect() as connection:
-        assert connection.exec_driver_sql('SELECT version FROM schema_migrations ORDER BY version').scalars().all() == [1, 2, 3]
+        assert connection.exec_driver_sql('SELECT version FROM schema_migrations ORDER BY version').scalars().all() == list(range(1, SCHEMA_VERSION + 1))
     target.dispose()

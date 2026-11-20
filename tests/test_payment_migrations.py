@@ -19,7 +19,7 @@ PAYMENT_TABLES = {'payment_attempts', 'active_checkouts', 'payment_events'}
 def version_one_database(tmp_path):
     target = make_engine(f'sqlite:///{tmp_path / "payments.db"}')
     old_tables = [table for table in Base.metadata.sorted_tables
-                  if table.name not in PAYMENT_TABLES | {'email_receipts'}]
+                  if table.name not in PAYMENT_TABLES | {'email_receipts', 'menu_items'}]
     Base.metadata.create_all(target, tables=old_tables)
     with target.begin() as connection:
         connection.exec_driver_sql('''CREATE TABLE schema_migrations (
