@@ -329,3 +329,11 @@ footer div > span, footer p { font-size: 10px; margin: 0; }
 .payment-review-table { min-width: 900px; }
 .payment-review-table td { max-width: 240px; overflow-wrap: anywhere; }
 @media(max-width:480px) { .payment-panel { padding: 16px; } .gcash-button { width: 100%; } }
+
+.receipt-panel { border-top: 1px solid #dce4f0; padding-top: 18px; margin-top: 18px; }
+.receipt-panel .payment-heading > strong { color: var(--ink); }
+.receipt-badge { display: inline-block; border-radius: 20px; padding: 4px 10px; background: #edf0f6; color: #58637c; font-size: 10px; font-weight: 650; }
+.receipt-badge[data-status="sent"] { background: var(--mint); color: var(--teal); }
+.receipt-badge[data-status="preview"] { background: var(--lavender); color: var(--accent); }
+.receipt-badge[data-status="failed"] { background: #fff1e7; color: #904e28; }
+.receipt-note { margin: 10px 0 0; color: #6d6377; font-size: 11px; }

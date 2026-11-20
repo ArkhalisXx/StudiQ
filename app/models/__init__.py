@@ -8,6 +8,7 @@ from app.database import Base
 from app.models.account import AdminGrant, AuthSession, User
 from app.models.reservations import Booking, BookingSlot, MaintenanceBlock, MaintenanceSlot
 from app.models.payments import ActiveCheckout, PaymentAttempt, PaymentEvent
+from app.models.receipts import EmailReceipt
 
 
 class WorkspaceType(Base):

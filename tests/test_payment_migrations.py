@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import Base, make_engine
-from app.migrations import MigrationError
+from app.migrations import MigrationError, SCHEMA_VERSION
 from app.models import (ActiveCheckout, AdminGrant, AuthSession, Booking, BookingSlot,
                         MaintenanceBlock, MaintenanceSlot, Package, PaymentAttempt,
                         PaymentEvent, SlotAllocation, TimeSlot, User, Workspace, WorkspaceType)
@@ -18,7 +18,8 @@ PAYMENT_TABLES = {'payment_attempts', 'active_checkouts', 'payment_events'}
 
 def version_one_database(tmp_path):
     target = make_engine(f'sqlite:///{tmp_path / "payments.db"}')
-    old_tables = [table for table in Base.metadata.sorted_tables if table.name not in PAYMENT_TABLES]
+    old_tables = [table for table in Base.metadata.sorted_tables
+                  if table.name not in PAYMENT_TABLES | {'email_receipts'}]
     Base.metadata.create_all(target, tables=old_tables)
     with target.begin() as connection:
         connection.exec_driver_sql('''CREATE TABLE schema_migrations (
@@ -93,7 +94,7 @@ def test_payment_upgrade_preserves_version_one_data_and_repeats_safely(tmp_path)
         assert session.get(Package, 1).price_minor == 19900
         assert session.get(Workspace, 1).is_active is False
     with target.connect() as connection:
-        assert connection.exec_driver_sql('SELECT version FROM schema_migrations ORDER BY version').scalars().all() == [1, 2]
+        assert connection.exec_driver_sql('SELECT version FROM schema_migrations ORDER BY version').scalars().all() == list(range(1, SCHEMA_VERSION + 1))
         assert connection.exec_driver_sql('SELECT applied_at FROM schema_migrations WHERE version = 1').scalar() == '2026-11-19T12:00:00Z'
         assert connection.exec_driver_sql('PRAGMA foreign_key_check').all() == []
     assert not (tmp_path / 'backups').exists()
@@ -105,7 +106,7 @@ def test_fresh_database_records_both_versions(tmp_path):
     initialize(target)
     assert PAYMENT_TABLES.issubset(inspect(target).get_table_names())
     with target.connect() as connection:
-        assert connection.exec_driver_sql('SELECT version FROM schema_migrations ORDER BY version').scalars().all() == [1, 2]
+        assert connection.exec_driver_sql('SELECT version FROM schema_migrations ORDER BY version').scalars().all() == list(range(1, SCHEMA_VERSION + 1))
     target.dispose()
 
 
