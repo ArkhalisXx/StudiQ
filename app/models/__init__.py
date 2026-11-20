@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 from app.models.account import AdminGrant, AuthSession, User
 from app.models.reservations import Booking, BookingSlot, MaintenanceBlock, MaintenanceSlot
+from app.models.payments import ActiveCheckout, PaymentAttempt, PaymentEvent
 
 
 class WorkspaceType(Base):

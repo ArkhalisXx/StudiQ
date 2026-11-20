@@ -8,7 +8,7 @@ from sqlalchemy import inspect
 
 from app.database import Base
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 ALLOCATION_COLUMNS = {'id', 'booking_date', 'workspace_id', 'time_slot_id', 'booking_id', 'maintenance_block_id'}
 
 
@@ -88,7 +88,7 @@ def _upgrade_allocations(connection):
 
 
 def upgrade(target):
-    """Create fresh tables or apply the one supported, versioned SQLite upgrade."""
+    """Create fresh tables, repair legacy allocation FKs, and add payment tables."""
     # Import registers all models before creating or upgrading tables.
     import app.models  # noqa: F401
 
@@ -116,10 +116,11 @@ def upgrade(target):
                 version INTEGER NOT NULL PRIMARY KEY,
                 applied_at TEXT NOT NULL
             )''')
-            connection.exec_driver_sql(
-                "INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
-                (SCHEMA_VERSION,),
-            )
+            for version in (1, 2):
+                connection.exec_driver_sql(
+                    "INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
+                    (version,),
+                )
             connection.commit()
         except Exception as error:
             connection.rollback()

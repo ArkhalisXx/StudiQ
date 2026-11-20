@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.database import Base, make_engine
 from app.manage import set_admin
-from app.migrations import MigrationError
+from app.migrations import MigrationError, SCHEMA_VERSION
 from app.models import (AdminGrant, AuthSession, Booking, MaintenanceBlock, Package,
                         SlotAllocation, TimeSlot, User, Workspace, WorkspaceType)
 from app.seed import initialize
@@ -69,7 +69,7 @@ def test_legacy_upgrade_preserves_accounts_catalog_and_creates_backup(tmp_path):
         assert session.get(AuthSession, 'a' * 64).user_id == user.id
         assert session.get(Package, 1).price_minor == 19900
         assert session.get(Workspace, 1).is_active is False
-        assert session.execute(text('SELECT version FROM schema_migrations')).scalars().all() == [1]
+        assert session.execute(text('SELECT version FROM schema_migrations ORDER BY version')).scalars().all() == list(range(1, SCHEMA_VERSION + 1))
         assert session.scalar(select(AdminGrant)) is None
     assert 'ix_legacy_slot_date' in {index['name'] for index in inspect(target).get_indexes('slot_allocations')}
     backups = list((tmp_path / 'backups').glob('*.sqlite3'))
@@ -150,11 +150,11 @@ def test_newer_schema_version_is_not_modified(tmp_path):
     target = make_engine(f'sqlite:///{tmp_path / "newer.db"}')
     initialize(target)
     with target.begin() as connection:
-        connection.exec_driver_sql("INSERT INTO schema_migrations VALUES (2, 'future-version')")
+        connection.exec_driver_sql("INSERT INTO schema_migrations VALUES (?, 'future-version')", (SCHEMA_VERSION + 1,))
     with pytest.raises(MigrationError, match='newer application'):
         initialize(target)
     with target.connect() as connection:
-        assert connection.exec_driver_sql('SELECT MAX(version) FROM schema_migrations').scalar() == 2
+        assert connection.exec_driver_sql('SELECT MAX(version) FROM schema_migrations').scalar() == SCHEMA_VERSION + 1
     target.dispose()
 
 

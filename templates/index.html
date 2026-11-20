@@ -26,7 +26,7 @@
       <section id="booking-review" class="booking-review" aria-labelledby="review-title" hidden>
         <p class="eyebrow">BEFORE YOU RESERVE</p><h3 id="review-title">Review your reservation</h3>
         <dl class="review-details"><div><dt>Date</dt><dd id="review-date"></dd></div><div><dt>Workspace</dt><dd id="review-type"></dd></div><div><dt>Pass</dt><dd id="review-pass"></dd></div><div><dt>Time slots · Manila</dt><dd id="review-slots"></dd></div><div><dt>Pass price</dt><dd id="review-price"></dd></div></dl>
-        <p class="notice">Your space is held for up to 15 minutes, or until the first slot begins. Online checkout is not available. Arrange on-site payment with staff so they can confirm your reservation before it expires.</p>
+        <p class="notice">Your space is held for up to 15 minutes, or until the first slot begins. After reserving, open My bookings to pay with GCash when checkout is available, or arrange on-site payment with staff before your hold expires.</p>
         <button id="reserve-submit" type="button" hidden>Reserve for up to 15 minutes</button>
         <a id="reserve-login" class="button-link" href="/login" hidden>Log in to reserve</a>
         <p id="reserve-result" role="status" aria-live="polite"></p>
@@ -39,7 +39,7 @@
       <div class="features">
         <article><div class="feature-top"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 11h16m-12 4h3m2 0h3"/></svg><span>01 / EXPLORE</span></div><h3>A space that fits.</h3><p>A quiet desk or a little room to collaborate. Explore your options and check what’s available.</p><a class="text-link" href="#availability">Find a space <span aria-hidden="true">&rarr;</span></a></article>
         <article><div class="feature-top"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>02 / BELONG</span></div><h3>Make yourself at home.</h3><p>Your own little corner of StudiQ. Create an account, settle in, and get ready for what’s next.</p><a class="text-link" href="{{ '/account' if user else '/register' }}">{{ 'My account' if user else 'Create an account' }} <span aria-hidden="true">&rarr;</span></a></article>
-        <article><div class="feature-top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5L21 9.4l-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.3-.9Z"/></svg><span>03 / RESERVE</span></div><h3>A day to look forward to.</h3><p>Reserve a space, review your booking, and arrange on-site payment with staff. Keep every visit in one place.</p><a class="text-link" href="{{ '/bookings' if user else '/login' }}">My bookings <span aria-hidden="true">&rarr;</span></a></article>
+        <article><div class="feature-top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5L21 9.4l-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.3-.9Z"/></svg><span>03 / RESERVE</span></div><h3>A day to look forward to.</h3><p>Reserve a space and keep every visit in one place. Choose GCash checkout when available or arrange on-site payment with staff.</p><a class="text-link" href="{{ '/bookings' if user else '/login' }}">My bookings <span aria-hidden="true">&rarr;</span></a></article>
       </div>
     </section>
   </main>
