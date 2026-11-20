@@ -75,8 +75,10 @@ def payment_summary(session, booking):
                    and (not attempt or attempt.mode == settings['mode'])
                    and (not lock or status == 'pending'))
     paid_at = attempt.paid_at.isoformat() + 'Z' if attempt and attempt.paid_at else None
+    from app.services.receipts import summary_receipt
     return {'status': status, 'method': 'GCash', 'mode': attempt.mode if attempt else settings['mode'],
-            'paid_at': paid_at, 'can_pay': can_pay, 'payments_enabled': settings['ready']}
+            'paid_at': paid_at, 'can_pay': can_pay, 'payments_enabled': settings['ready'],
+            'receipt': summary_receipt(session, attempt)}
 
 
 def start_checkout(session, booking_id, customer_id):
@@ -257,6 +259,8 @@ def apply_checkout(session, attempt, checkout, event_data=None):
         booking.confirmed_at = utc_now()
         booking.confirmed_by = None
         booking.hold_expires_at = None
+        from app.services.receipts import queue_receipt
+        queue_receipt(session, attempt, booking)
     if lock and lock.attempt_id == attempt.id:
         session.delete(lock)
     return attempt.status

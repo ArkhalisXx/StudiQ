@@ -15,12 +15,14 @@ from app.api.auth import profile_router, router as auth_router
 from app.api.bookings import router as booking_router
 from app.api.admin import router as admin_router
 from app.api.payments import router as payment_router
+from app.api.receipts import router as receipt_router
 from app.config import ROOT
 from app.database import SessionLocal, engine, get_session
 from app.seed import initialize
 from app.models import User
 from app.services.auth import current_user
 from app.services.admin import has_admin_access, refresh_operations
+from app.services.receipts import process_receipts
 
 
 def clean_up_reservations():
@@ -37,16 +39,29 @@ async def reservation_cleanup():
             logging.getLogger(__name__).exception('Reservation cleanup failed; it will retry.')
 
 
+async def receipt_delivery():
+    while True:
+        try:
+            await asyncio.to_thread(process_receipts)
+        except Exception:
+            logging.getLogger(__name__).error('Receipt queue could not be processed; it will retry.')
+        await asyncio.sleep(10)
+
+
 @asynccontextmanager
 async def lifespan(application):
     initialize()
     cleanup_task = asyncio.create_task(reservation_cleanup())
+    receipt_task = asyncio.create_task(receipt_delivery())
     try:
         yield
     finally:
         cleanup_task.cancel()
+        receipt_task.cancel()
         with suppress(asyncio.CancelledError):
             await cleanup_task
+        with suppress(asyncio.CancelledError):
+            await receipt_task
 
 
 app = FastAPI(title='StudiQ', version='0.3.0', lifespan=lifespan)
@@ -56,6 +71,7 @@ app.include_router(profile_router)
 app.include_router(booking_router)
 app.include_router(admin_router)
 app.include_router(payment_router)
+app.include_router(receipt_router)
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
 templates = Jinja2Templates(directory=ROOT / 'templates')
 
@@ -64,7 +80,7 @@ templates = Jinja2Templates(directory=ROOT / 'templates')
 async def private_pages(request, call_next):
     response = await call_next(request)
     private_page = request.url.path in {'/', '/login', '/register', '/account', '/bookings', '/admin'}
-    private_api = request.url.path.startswith(('/api/auth/', '/api/bookings', '/api/admin/', '/api/checkout/', '/api/payments/'))
+    private_api = request.url.path.startswith(('/api/auth/', '/api/bookings', '/api/admin/', '/api/checkout/', '/api/payments/', '/api/receipts/'))
     if private_page or private_api:
         response.headers['Cache-Control'] = 'no-store'
     return response

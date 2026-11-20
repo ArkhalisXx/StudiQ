@@ -8,7 +8,7 @@ from sqlalchemy import inspect
 
 from app.database import Base
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 ALLOCATION_COLUMNS = {'id', 'booking_date', 'workspace_id', 'time_slot_id', 'booking_id', 'maintenance_block_id'}
 
 
@@ -88,7 +88,7 @@ def _upgrade_allocations(connection):
 
 
 def upgrade(target):
-    """Create fresh tables, repair legacy allocation FKs, and add payment tables."""
+    """Create fresh tables, repair legacy allocation FKs, and add payment/receipt tables."""
     # Import registers all models before creating or upgrading tables.
     import app.models  # noqa: F401
 
@@ -116,7 +116,7 @@ def upgrade(target):
                 version INTEGER NOT NULL PRIMARY KEY,
                 applied_at TEXT NOT NULL
             )''')
-            for version in (1, 2):
+            for version in (1, 2, 3):
                 connection.exec_driver_sql(
                     "INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
                     (version,),

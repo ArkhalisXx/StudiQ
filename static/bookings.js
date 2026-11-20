@@ -35,6 +35,49 @@
     if (!data) throw new Error('The server returned an unexpected response. Please refresh.');
     return data;
   }
+  function receiptDetails(booking, receipt) {
+    const panel = element('section', undefined, 'receipt-panel');
+    panel.setAttribute('aria-label', 'Booking receipt');
+    const heading = element('div', undefined, 'payment-heading');
+    const names = {queued: 'Queued', sending: 'Processing', sent: 'Email sent', preview: 'Preview ready', failed: 'Needs attention', not_requested: 'Not requested'};
+    heading.append(element('strong', 'Booking receipt'));
+    const badge = element('span', names[receipt.status] || 'Status unavailable', 'receipt-badge');
+    badge.dataset.status = receipt.status; heading.append(badge); panel.append(heading);
+    const messages = {
+      queued: 'Your receipt is being prepared. Its status will update automatically.',
+      sending: 'Your receipt is being processed. Its status will update automatically.',
+      sent: `Receipt sent to your account email${receipt.sent_at ? ` · ${timestamp(receipt.sent_at)} (Manila time)` : ''}.`,
+      preview: 'A local receipt preview is ready. It has not been emailed.',
+      failed: 'Receipt delivery could not be confirmed. Check your inbox before retrying. If retry is unavailable, refresh shortly or ask staff for help.',
+      not_requested: 'An email receipt has not been requested for this payment yet.'
+    };
+    panel.append(element('p', messages[receipt.status] || 'Receipt status is unavailable. Please refresh your bookings.', 'payment-description'));
+    if (typeof receipt.message === 'string' && receipt.message.trim()) panel.append(element('p', receipt.message, 'receipt-note'));
+    const actions = element('div', undefined, 'card-actions payment-actions');
+    if (typeof receipt.preview_url === 'string' && /^\/api\/receipts\/[A-Za-z0-9_-]+\/preview$/.test(receipt.preview_url)) {
+      const link = element('a', 'Download receipt preview', 'button-link');
+      link.href = receipt.preview_url; link.download = ''; actions.append(link);
+    }
+    if (receipt.can_retry === true && ['failed', 'not_requested', 'preview'].includes(receipt.status)) {
+      const label = receipt.status === 'failed' ? 'Retry email receipt' : receipt.status === 'preview' ? 'Email this receipt' : 'Prepare email receipt';
+      const button = element('button', label, 'secondary-button'); button.type = 'button';
+      button.addEventListener('click', async () => {
+        if (busy) return;
+        busy = true; button.disabled = true; errorBox.hidden = true; button.textContent = 'Preparing receipt…';
+        try {
+          await request(`/api/checkout/${encodeURIComponent(booking.id)}/receipt`, {method: 'POST'});
+          busy = false; await load();
+        } catch (error) {
+          busy = false; await load();
+          errorBox.textContent = `${errorMessage(error)} Check your inbox and refresh the receipt status before retrying.`;
+          errorBox.hidden = false;
+        } finally { busy = false; }
+      });
+      actions.append(button);
+    }
+    if (actions.childElementCount) panel.append(actions);
+    return panel;
+  }
   function paymentDetails(booking) {
     const payment = booking.payment || {status: 'unpaid', payments_enabled: false};
     const panel = element('section', undefined, 'payment-panel');
@@ -108,6 +151,7 @@
       actions.append(button);
     }
     if (actions.childElementCount) panel.append(actions);
+    if (payment.status === 'paid' && payment.receipt && typeof payment.receipt === 'object') panel.append(receiptDetails(booking, payment.receipt));
     return panel;
   }
   function render(bookings) {
