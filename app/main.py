@@ -16,6 +16,7 @@ from app.api.bookings import router as booking_router
 from app.api.admin import router as admin_router
 from app.api.payments import router as payment_router
 from app.api.receipts import router as receipt_router
+from app.api.menu import admin_router as admin_menu_router, router as menu_router
 from app.config import ROOT
 from app.database import SessionLocal, engine, get_session
 from app.seed import initialize
@@ -72,6 +73,8 @@ app.include_router(booking_router)
 app.include_router(admin_router)
 app.include_router(payment_router)
 app.include_router(receipt_router)
+app.include_router(menu_router)
+app.include_router(admin_menu_router)
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
 templates = Jinja2Templates(directory=ROOT / 'templates')
 
@@ -79,8 +82,8 @@ templates = Jinja2Templates(directory=ROOT / 'templates')
 @app.middleware('http')
 async def private_pages(request, call_next):
     response = await call_next(request)
-    private_page = request.url.path in {'/', '/login', '/register', '/account', '/bookings', '/admin'}
-    private_api = request.url.path.startswith(('/api/auth/', '/api/bookings', '/api/admin/', '/api/checkout/', '/api/payments/', '/api/receipts/'))
+    private_page = request.url.path in {'/', '/login', '/register', '/account', '/bookings', '/admin', '/menu', '/admin/menu'}
+    private_api = request.url.path.startswith(('/api/auth/', '/api/bookings', '/api/admin/', '/api/checkout/', '/api/payments/', '/api/receipts/', '/api/menu'))
     if private_page or private_api:
         response.headers['Cache-Control'] = 'no-store'
     return response
@@ -111,6 +114,12 @@ def auth_page(request: Request, user: User | None = Depends(current_user)):
                                       context={'register': request.url.path == '/register', 'user': None})
 
 
+@app.get('/menu', include_in_schema=False)
+def digital_menu(request: Request, user: User | None = Depends(current_user), session: Session = Depends(get_session)):
+    return templates.TemplateResponse(request=request, name='menu.html',
+                                      context={'user': user, 'is_admin': has_admin_access(session, user)})
+
+
 @app.get('/account', include_in_schema=False)
 def account(request: Request, user: User | None = Depends(current_user), session: Session = Depends(get_session)):
     if user is None:
@@ -138,6 +147,17 @@ def admin_dashboard(request: Request, user: User | None = Depends(current_user),
     return templates.TemplateResponse(request=request, name='admin.html',
                                       context={'user': user, 'is_admin': True,
                                                'today': local_today().isoformat()})
+
+
+@app.get('/admin/menu', include_in_schema=False)
+def manage_menu(request: Request, user: User | None = Depends(current_user), session: Session = Depends(get_session)):
+    if user is None:
+        return RedirectResponse('/login', status_code=303)
+    if not has_admin_access(session, user):
+        return templates.TemplateResponse(request=request, name='forbidden.html', status_code=403,
+                                          context={'user': user, 'is_admin': False})
+    return templates.TemplateResponse(request=request, name='admin_menu.html',
+                                      context={'user': user, 'is_admin': True})
 
 
 @app.get('/health')

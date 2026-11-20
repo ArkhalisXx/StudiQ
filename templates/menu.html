@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}StudiQ · Digital menu{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', path='menu.css') }}">
+<script src="{{ url_for('static', path='menu.js') }}" defer></script>
+{% endblock %}
+{% block content %}
+<main class="wrap menu-page" id="main-content">
+  <section class="menu-heading" aria-labelledby="menu-title">
+    <div class="menu-heading-copy">
+      <p class="eyebrow">A MOMENT TO RECHARGE</p>
+      <h1 id="menu-title">Good things for<br>your <em>study break.</em></h1>
+      <p class="intro">A sip, a snack, a little fuel for your next big idea. Explore our food and drinks, then order with our staff.</p>
+      {% if is_admin %}<a class="text-link menu-manage-link" href="/admin/menu">Manage menu <span aria-hidden="true">&rarr;</span></a>{% endif %}
+    </div>
+    <div class="menu-break-note">
+      <svg viewBox="0 0 180 136" fill="none" aria-hidden="true">
+        <ellipse cx="92" cy="119" rx="69" ry="8" fill="#e5ddf2"/>
+        <path d="M111 56h17c19 0 19 31 0 31h-12" stroke="#8069b4" stroke-width="5"/>
+        <path d="M51 51h70l-6 51c-1 9-11 15-29 15s-28-6-29-15l-6-51Z" fill="#fffdf9" stroke="#8069b4" stroke-width="2.5"/>
+        <ellipse cx="86" cy="51" rx="35" ry="9" fill="#dfd2ed" stroke="#8069b4" stroke-width="2.5"/>
+        <ellipse cx="86" cy="52" rx="26" ry="5" fill="#a68675"/>
+        <path d="M74 31c-11-11 10-14 1-25M94 32c-10-12 11-15 1-26" stroke="#ab96c8" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M31 102c0-12 9-22 20-23l5 23-25 0Z" fill="#eac9a4" stroke="#a68058" stroke-width="2"/>
+        <path d="m34 91 10 6m-5-13 10 6" stroke="#a68058" stroke-width="2" stroke-linecap="round"/>
+        <path d="m139 34 3-7m-1 23 7-1m-17-19-2-5" stroke="#b1a1c9" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <p>A small break.<br><strong>A fresh start.</strong></p>
+    </div>
+  </section>
+
+  <section class="menu-catalog" aria-labelledby="menu-catalog-title">
+    <div class="menu-catalog-heading">
+      <div><p class="eyebrow">FIND YOUR FAVORITE</p><h2 id="menu-catalog-title">On the menu</h2></div>
+      <p class="menu-order-note"><span class="status-dot" aria-hidden="true"></span>Order with our staff</p>
+    </div>
+    <div class="menu-controls">
+      <label class="menu-search-label" for="menu-search">Search the menu
+        <span class="menu-search-field">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
+          <input id="menu-search" type="search" placeholder="Try a drink or a favorite snack" autocomplete="off" maxlength="200" aria-controls="menu-list" disabled>
+        </span>
+      </label>
+      <fieldset class="menu-category-filter">
+        <legend>Browse by category</legend>
+        <div class="menu-category-buttons">
+          <button type="button" data-menu-category="all" aria-pressed="true" aria-controls="menu-list" disabled>All</button>
+          <button type="button" data-menu-category="drinks" aria-pressed="false" aria-controls="menu-list" disabled>Drinks</button>
+          <button type="button" data-menu-category="snacks" aria-pressed="false" aria-controls="menu-list" disabled>Snacks</button>
+          <button type="button" data-menu-category="meals" aria-pressed="false" aria-controls="menu-list" disabled>Meals</button>
+        </div>
+      </fieldset>
+    </div>
+
+    <p id="menu-status" class="menu-status" role="status" aria-live="polite" aria-atomic="true">Loading the menu…</p>
+    <div id="menu-error" class="menu-message menu-error" role="alert" hidden>
+      <h3>We couldn’t load the menu.</h3>
+      <p>Please try again in a moment, or ask our staff what’s available.</p>
+      <button id="menu-retry" type="button">Try again <span aria-hidden="true">&rarr;</span></button>
+    </div>
+    <div id="menu-empty" class="menu-message" hidden>
+      <span class="menu-message-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M6 11h17v10a6 6 0 0 1-6 6h-5a6 6 0 0 1-6-6V11Zm17 2h2a4 4 0 0 1 0 8h-2M11 5v2m6-3v3"/></svg>
+      </span>
+      <h3>Something good is on its way.</h3>
+      <p>We’re putting our menu together. Ask our staff about today’s food and drinks.</p>
+    </div>
+    <div id="menu-no-results" class="menu-message" hidden>
+      <h3>No matches this time.</h3>
+      <p>Try another search or browse all our food and drinks.</p>
+      <button id="menu-clear" class="menu-secondary-button" type="button">Clear search &amp; filters</button>
+    </div>
+    <ul id="menu-list" class="menu-list" aria-label="Food and drinks" aria-busy="true"></ul>
+    <noscript><p class="menu-message">Enable JavaScript to browse the menu, or ask our staff about today’s food and drinks.</p></noscript>
+    <p class="menu-footnote">All prices are in Philippine pesos. Ready for a break? Our staff can take your order.</p>
+  </section>
+</main>
+{% endblock %}
