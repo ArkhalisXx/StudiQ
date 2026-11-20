@@ -7,6 +7,7 @@
   const grid = document.querySelector('#allocation-grid');
   const roster = document.querySelector('#admin-roster');
   const members = document.querySelector('#member-list');
+  const paymentReview = document.querySelector('#payment-review-list');
   const maintenanceForm = document.querySelector('#maintenance-form');
   const workspaceSelect = document.querySelector('#maintenance-workspace');
   const slotChoices = document.querySelector('#maintenance-slots');
@@ -29,7 +30,7 @@
     if (response.status === 204) return {};
     const body = await response.json().catch(() => null);
     if (response.status === 403) {
-      grid.replaceChildren(); roster.replaceChildren(); members.replaceChildren();
+      grid.replaceChildren(); roster.replaceChildren(); members.replaceChildren(); paymentReview.replaceChildren();
       loadedDate = null; maintenanceForm.querySelector('button').disabled = true;
     }
     if (!response.ok) throw new Error(typeof body?.detail === 'string' ? body.detail : 'The request could not be completed. Please refresh and try again.');
@@ -39,6 +40,19 @@
   function showError(error) { errorBox.textContent = error instanceof TypeError || error instanceof RangeError ? 'The server returned an unexpected response. Please refresh.' : error.message; errorBox.hidden = false; }
   function badge(value) {
     const node = element('span', labels[value] || value, 'booking-badge'); node.dataset.status = value; return node;
+  }
+  function paymentSummary(payment) {
+    const panel = element('div', undefined, 'admin-payment-summary');
+    const names = {unpaid: 'Not paid', creating: 'Preparing checkout', pending: 'Pending', paid: 'Paid', review: 'Staff review required', failed: 'Failed', expired: 'Checkout expired', cancelled: 'Checkout cancelled'};
+    const state = payment?.status || 'unpaid';
+    const tag = element('span', `GCash · ${names[state] || 'Status unavailable'}`, 'payment-badge'); tag.dataset.status = state; panel.append(tag);
+    if (payment?.mode === 'test') panel.append(element('span', 'TEST MODE · No real charge', 'payment-test-note'));
+    if (state === 'review') panel.append(element('p', 'Payment received; staff review required. Do not ask the customer to pay again.', 'payment-review-note'));
+    if (state === 'paid' && payment?.paid_at) {
+      const paidAt = new Date(payment.paid_at);
+      if (!Number.isNaN(paidAt.getTime())) panel.append(element('p', `Received ${new Intl.DateTimeFormat('en-PH', {dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila'}).format(paidAt)} · Manila time`, 'notice'));
+    }
+    return panel;
   }
   async function mutate(url, options, button) {
     if (busy) return;
@@ -91,6 +105,7 @@
       card.append(element('p', `${booking.workspace_code} · ${booking.workspace_type} · ${booking.package_name}`, 'roster-summary'));
       card.append(element('p', booking.slots.map(slot => `${slot.label} ${slot.starts_at}–${slot.ends_at}`).join(' + '), 'notice'));
       card.append(element('p', new Intl.NumberFormat('en-PH', {style: 'currency', currency: booking.currency}).format(booking.price_minor / 100), 'roster-price'));
+      card.append(paymentSummary(booking.payment));
       if (booking.status === 'pending_payment') {
         const expiry = new Date(booking.hold_expires_at);
         const deadline = Number.isNaN(expiry.getTime()) ? 'unavailable' : new Intl.DateTimeFormat('en-PH', {dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila'}).format(expiry);
@@ -130,6 +145,28 @@
     }
     table.append(head, body); members.replaceChildren(table);
   }
+  function renderPaymentReview(rows) {
+    if (!rows.length) { paymentReview.replaceChildren(element('p', 'No payments currently need staff review.', 'empty-state')); return; }
+    const table = element('table', undefined, 'data-table payment-review-table');
+    const caption = element('caption', 'Payments requiring staff review across all dates.', 'sr-only');
+    const head = element('thead'); const heading = element('tr');
+    for (const label of ['Customer', 'Reservation', 'Expected amount', 'Mode', 'Reason', 'Received']) {
+      const cell = element('th', label); cell.scope = 'col'; heading.append(cell);
+    }
+    head.append(heading); const body = element('tbody');
+    for (const payment of rows) {
+      const row = element('tr'); const customer = element('td');
+      customer.append(element('strong', payment.customer_name), element('small', payment.email));
+      const reference = element('td'); reference.append(element('span', payment.booking_id), element('small', `Attempt: ${payment.attempt_id}`));
+      const amount = new Intl.NumberFormat('en-PH', {style: 'currency', currency: payment.currency}).format(payment.amount_minor / 100);
+      const received = new Date(payment.paid_at || payment.created_at);
+      const receivedAt = Number.isNaN(received.getTime()) ? 'Unavailable' : new Intl.DateTimeFormat('en-PH', {dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila'}).format(received);
+      row.append(customer, reference, element('td', amount), element('td', payment.mode === 'test' ? 'TEST · No real charge' : payment.mode === 'live' ? 'Live' : 'Unknown'),
+        element('td', payment.review_reason ? payment.review_reason.replaceAll('_', ' ') : 'Staff review required'), element('td', `${receivedAt} · Manila time`));
+      body.append(row);
+    }
+    table.append(caption, head, body); paymentReview.replaceChildren(table);
+  }
   function renderMaintenance(data) {
     const selectedWorkspace = workspaceSelect.value;
     const selectedSlots = Array.from(slotChoices.querySelectorAll('input:checked')).map(input => input.value);
@@ -150,14 +187,15 @@
     busy = true; dateForm.querySelector('button').disabled = true; errorBox.hidden = true;
     status.textContent = `Loading ${selectedDate}…`;
     try {
-      const [allocations, bookings, directory] = await Promise.all([
+      const [allocations, bookings, directory, reviewPayments] = await Promise.all([
         request(`/api/admin/allocations?booking_date=${encodeURIComponent(selectedDate)}`),
         request(`/api/admin/roster?booking_date=${encodeURIComponent(selectedDate)}`),
-        request('/api/admin/members')
+        request('/api/admin/members'),
+        request('/api/admin/payments/review')
       ]);
       if (currentVersion !== version || selectedDate !== dateInput.value) return;
-      if (!allocations || !Array.isArray(allocations.slots) || !Array.isArray(allocations.workspaces) || !Array.isArray(bookings) || !Array.isArray(directory)) throw new Error('The daily view is unavailable. Please refresh.');
-      renderGrid(allocations); renderRoster(bookings); renderMembers(directory); renderMaintenance(allocations);
+      if (!allocations || !Array.isArray(allocations.slots) || !Array.isArray(allocations.workspaces) || !Array.isArray(bookings) || !Array.isArray(directory) || !Array.isArray(reviewPayments)) throw new Error('The daily view is unavailable. Please refresh.');
+      renderGrid(allocations); renderRoster(bookings); renderMembers(directory); renderMaintenance(allocations); renderPaymentReview(reviewPayments);
       loadedDate = selectedDate; status.textContent = `Showing ${selectedDate} · all times are in Manila. Refreshes every 30 seconds.`;
     } catch (error) { if (currentVersion === version) { showError(error); status.textContent = 'Daily view could not be refreshed.'; } }
     finally { busy = false; dateForm.querySelector('button').disabled = false; }

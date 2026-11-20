@@ -58,12 +58,14 @@ def booking_actions(session, booking):
     now = utc_now()
     start = slot_time(booking.booking_date, min(s.starts_at for s in slots)) if slots else None
     end = slot_time(booking.booking_date, max(s.ends_at for s in slots)) if slots else None
+    from app.services.payments import payment_blocks_changes
+    payment_started = payment_blocks_changes(session, booking.id)
     return {
-        'can_confirm': bool(booking.status == 'pending_payment' and start and now < start
+        'can_confirm': bool(booking.status == 'pending_payment' and not payment_started and start and now < start
                             and booking.hold_expires_at and now < booking.hold_expires_at),
         'can_check_in': bool(booking.status == 'confirmed' and start and end and start <= now < end),
         'can_complete': booking.status == 'checked_in',
-        'can_cancel': bool(booking.status in {'pending_payment', 'confirmed'} and end and now < end),
+        'can_cancel': bool(booking.status in {'pending_payment', 'confirmed'} and not payment_started and end and now < end),
     }
 
 

@@ -308,3 +308,24 @@ footer div > span, footer p { font-size: 10px; margin: 0; }
   .booking-badge { white-space: normal; }
   header nav { justify-content: flex-start; gap: 6px 18px; }
 }
+
+/* GCash checkout and payment status. */
+.payment-panel { border: 1px solid #dce4f0; border-radius: 10px; background: #f8faff; padding: 18px; margin: 0 0 22px; }
+.payment-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.payment-heading > strong { color: #28549a; font-size: 13px; }
+.payment-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; background: #edf0f6; color: #58637c; font-size: 10px; font-weight: 650; }
+.payment-badge[data-status="paid"] { background: var(--mint); color: var(--teal); }
+.payment-badge[data-status="review"], .payment-badge[data-status="failed"] { background: #fff1e7; color: #904e28; }
+.payment-badge[data-status="pending"], .payment-badge[data-status="creating"] { background: #e7eefb; color: #315b9b; }
+.payment-description { margin: 12px 0 0; font-size: 12px; color: #5d6475; }
+.payment-test-note { display: inline-block; border: 1px solid #e4cb9f; color: #7b571c; background: #fff5df; border-radius: 5px; font-size: 10px; font-weight: 600; padding: 5px 9px; margin: 11px 0 0; }
+.payment-actions { margin-top: 16px; }
+.gcash-button { background: #1764c0; }
+.gcash-button:hover { background: #11519f; }
+.admin-payment-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 0 0 19px; }
+.admin-payment-summary .payment-test-note { margin: 0; }
+.admin-payment-summary > p { flex-basis: 100%; margin: 0; font-size: 11px; }
+.payment-review-note { color: #904e28; }
+.payment-review-table { min-width: 900px; }
+.payment-review-table td { max-width: 240px; overflow-wrap: anywhere; }
+@media(max-width:480px) { .payment-panel { padding: 16px; } .gcash-button { width: 100%; } }

@@ -14,6 +14,7 @@ from app.api.catalog import local_today, router
 from app.api.auth import profile_router, router as auth_router
 from app.api.bookings import router as booking_router
 from app.api.admin import router as admin_router
+from app.api.payments import router as payment_router
 from app.config import ROOT
 from app.database import SessionLocal, engine, get_session
 from app.seed import initialize
@@ -48,12 +49,13 @@ async def lifespan(application):
             await cleanup_task
 
 
-app = FastAPI(title='StudiQ', version='0.2.0', lifespan=lifespan)
+app = FastAPI(title='StudiQ', version='0.3.0', lifespan=lifespan)
 app.include_router(router)
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(booking_router)
 app.include_router(admin_router)
+app.include_router(payment_router)
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
 templates = Jinja2Templates(directory=ROOT / 'templates')
 
@@ -62,7 +64,7 @@ templates = Jinja2Templates(directory=ROOT / 'templates')
 async def private_pages(request, call_next):
     response = await call_next(request)
     private_page = request.url.path in {'/', '/login', '/register', '/account', '/bookings', '/admin'}
-    private_api = request.url.path.startswith(('/api/auth/', '/api/bookings', '/api/admin/'))
+    private_api = request.url.path.startswith(('/api/auth/', '/api/bookings', '/api/admin/', '/api/checkout/', '/api/payments/'))
     if private_page or private_api:
         response.headers['Cache-Control'] = 'no-store'
     return response

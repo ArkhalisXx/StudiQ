@@ -101,6 +101,9 @@ def serialize_booking(session, booking, user_id=None):
                   and (user_id is None or booking.customer_id == user_id))
     if booking.status == 'pending_payment':
         can_cancel = can_cancel and booking.hold_expires_at is not None and booking.hold_expires_at > now
+    from app.services.payments import payment_blocks_changes, payment_summary
+    payment = payment_summary(session, booking)
+    can_cancel = can_cancel and not payment_blocks_changes(session, booking.id)
     return {
         'id': booking.id, 'booking_date': booking.booking_date, 'status': booking.status,
         'workspace_code': workspace.code, 'workspace_type': category.name,
@@ -108,7 +111,7 @@ def serialize_booking(session, booking, user_id=None):
         'slots': [{'id': slot.id, 'label': slot.label, 'starts_at': slot.starts_at.strftime('%H:%M'),
                    'ends_at': slot.ends_at.strftime('%H:%M')} for slot in slots],
         'created_at': utc_string(booking.created_at), 'hold_expires_at': utc_string(booking.hold_expires_at),
-        'can_cancel': bool(can_cancel),
+        'can_cancel': bool(can_cancel), 'payment': payment,
     }
 
 

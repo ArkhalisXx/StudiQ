@@ -4,7 +4,13 @@
   const status = document.querySelector('#bookings-status');
   const errorBox = document.querySelector('#bookings-error');
   const refresh = document.querySelector('#bookings-refresh');
-  const labels = {pending_payment: 'Awaiting staff confirmation', confirmed: 'Confirmed', checked_in: 'Checked in', completed: 'Completed', cancelled: 'Cancelled', expired: 'Expired'};
+  const returnBanner = document.querySelector('#payment-return');
+  const labels = {pending_payment: 'Awaiting payment or staff confirmation', confirmed: 'Confirmed', checked_in: 'Checked in', completed: 'Completed', cancelled: 'Cancelled', expired: 'Expired'};
+  const returnedFromCheckout = ['success', 'cancel', 'cancelled'].includes(new URLSearchParams(window.location.search).get('payment'));
+  if (returnedFromCheckout) {
+    returnBanner.hidden = false;
+    returnBanner.textContent = 'Checking your latest payment status…';
+  }
   let busy = false;
   function errorMessage(error) {
     return error instanceof TypeError || error instanceof RangeError ? 'The server returned an unexpected response. Please refresh.' : error.message;
@@ -29,6 +35,81 @@
     if (!data) throw new Error('The server returned an unexpected response. Please refresh.');
     return data;
   }
+  function paymentDetails(booking) {
+    const payment = booking.payment || {status: 'unpaid', payments_enabled: false};
+    const panel = element('section', undefined, 'payment-panel');
+    panel.setAttribute('aria-label', 'Payment status');
+    const heading = element('div', undefined, 'payment-heading');
+    heading.append(element('strong', 'GCash payment'));
+    const names = {unpaid: 'Not paid', creating: 'Preparing checkout', pending: 'Pending', paid: 'Paid', review: 'Staff review required', failed: 'Failed', expired: 'Checkout expired', cancelled: 'Checkout cancelled'};
+    const badge = element('span', names[payment.status] || 'Status unavailable', 'payment-badge');
+    badge.dataset.status = payment.status; heading.append(badge); panel.append(heading);
+    if (payment.mode === 'test') panel.append(element('p', 'TEST MODE · Sandbox payment, no real charge.', 'payment-test-note'));
+    let message;
+    if (payment.status === 'paid') {
+      message = `${payment.mode === 'test' ? 'Test GCash payment completed' : 'GCash payment received'}${payment.paid_at ? ` · ${timestamp(payment.paid_at)} (Manila time)` : ''}.`;
+    } else if (payment.status === 'review') {
+      message = 'Payment received; staff review required. Do not pay again. Contact staff about your reservation.';
+    } else if (payment.status === 'creating') {
+      message = 'Your GCash checkout is being prepared. Refresh your booking status before trying again.';
+    } else if (payment.status === 'pending') {
+      message = 'GCash payment is pending. Finish checkout before your hold expires, then refresh your booking status.';
+    } else if (!payment.payments_enabled) {
+      message = 'GCash checkout is not configured yet. Staff confirmation is available.';
+    } else if (payment.status === 'failed') {
+      message = 'GCash payment failed. Check your booking status before retrying.';
+    } else if (payment.status === 'expired' || payment.status === 'cancelled') {
+      message = 'This GCash checkout has ended. Check your booking status before trying again.';
+    } else {
+      message = 'Pay through PayMongo’s hosted GCash checkout before your reservation hold expires.';
+    }
+    panel.append(element('p', message, 'payment-description'));
+    const actions = element('div', undefined, 'card-actions payment-actions');
+    if (payment.can_pay === true && !['paid', 'review', 'creating'].includes(payment.status)) {
+      const button = element('button', payment.status === 'pending' ? 'Continue GCash checkout' : 'Pay with GCash', 'gcash-button');
+      button.type = 'button';
+      button.addEventListener('click', async () => {
+        if (busy) return;
+        busy = true; button.disabled = true; errorBox.hidden = true;
+        button.textContent = 'Opening GCash checkout…';
+        let leaving = false;
+        try {
+          const checkout = await request(`/api/checkout/${encodeURIComponent(booking.id)}`, {method: 'POST'});
+          let url;
+          try { url = new URL(checkout.checkout_url); } catch { throw new Error('A valid GCash checkout link was not returned.'); }
+          if (url.protocol !== 'https:' || url.hostname !== 'checkout.paymongo.com' || url.port || url.username || url.password
+              || !['test', 'live'].includes(checkout.mode)) throw new Error('A valid GCash checkout link was not returned.');
+          if (checkout.mode !== payment.mode) throw new Error('The payment mode changed. Refresh your booking before starting checkout.');
+          leaving = true;
+          window.location.assign(url.href);
+        } catch (error) {
+          busy = false;
+          await load();
+          errorBox.textContent = `${errorMessage(error)} Check your booking status before retrying checkout.`;
+          errorBox.hidden = false;
+        } finally {
+          if (!leaving) { busy = false; button.disabled = false; }
+        }
+      });
+      actions.append(button);
+    }
+    if (['creating', 'pending'].includes(payment.status)) {
+      const button = element('button', 'Refresh payment status', 'secondary-button'); button.type = 'button';
+      button.addEventListener('click', async () => {
+        if (busy) return;
+        busy = true; button.disabled = true; errorBox.hidden = true; button.textContent = 'Checking GCash status…';
+        try {
+          await request(`/api/checkout/${encodeURIComponent(booking.id)}/reconcile`, {method: 'POST'});
+          busy = false; await load();
+        } catch (error) {
+          errorBox.textContent = errorMessage(error); errorBox.hidden = false;
+        } finally { busy = false; button.disabled = false; button.textContent = 'Refresh payment status'; }
+      });
+      actions.append(button);
+    }
+    if (actions.childElementCount) panel.append(actions);
+    return panel;
+  }
   function render(bookings) {
     const cards = bookings.map(booking => {
       const card = element('article', undefined, 'reservation-card');
@@ -47,9 +128,10 @@
         const group = element('div'); group.append(element('dt', label), element('dd', value)); details.append(group);
       }
       card.append(details);
-      if (booking.status === 'pending_payment') card.append(element('p', `Hold expires ${timestamp(booking.hold_expires_at)} (Manila time). Arrange on-site payment with staff before this deadline.`, 'hold-note'));
+      if (booking.status === 'pending_payment') card.append(element('p', `Hold expires ${timestamp(booking.hold_expires_at)} (Manila time). Complete an available GCash checkout or arrange on-site payment with staff before this deadline.`, 'hold-note'));
       if (booking.status === 'expired') card.append(element('p', 'This hold expired and the space was released. Check availability to make a new reservation.', 'notice'));
-      if (booking.status === 'confirmed') card.append(element('p', 'Your reservation has been confirmed by staff. This status is not an online payment receipt.', 'notice'));
+      if (booking.status === 'confirmed' && booking.payment?.status !== 'paid') card.append(element('p', 'Your reservation has been confirmed by staff. This status is not a GCash payment receipt.', 'notice'));
+      card.append(paymentDetails(booking));
       if (booking.can_cancel) {
         const button = element('button', 'Cancel reservation', 'secondary-button'); button.type = 'button';
         button.addEventListener('click', async () => {
@@ -81,6 +163,7 @@
       const bookings = await request('/api/bookings/me');
       if (!Array.isArray(bookings)) throw new Error('The server returned an unexpected response. Please refresh.');
       render(bookings);
+      if (returnedFromCheckout) returnBanner.textContent = bookings.length ? 'Your latest payment status is shown below. If a payment is still pending, finish checkout or refresh shortly.' : 'No bookings were found for this account. No payment confirmation can be shown.';
     } catch (error) {
       errorBox.textContent = errorMessage(error); errorBox.hidden = false;
       status.textContent = 'Bookings could not be refreshed.';
@@ -88,6 +171,7 @@
   }
   refresh.addEventListener('click', load);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+  window.addEventListener('pageshow', event => { if (event.persisted) { busy = false; load(); } });
   setInterval(() => { if (!document.hidden && !list.contains(document.activeElement)) load(); }, 30000);
   load();
 })();
