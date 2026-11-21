@@ -17,7 +17,7 @@ def make_engine(url):
     return engine
 
 
-INSTANCE.mkdir(exist_ok=True)
+INSTANCE.mkdir(parents=True, exist_ok=True)
 engine = make_engine(DATABASE_URL)
 SessionLocal = sessionmaker(engine)
 
